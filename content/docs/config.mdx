@@ -1,0 +1,389 @@
+---
+title: Configuration
+description: Configuration settings for the server instance.
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# Configuration
+
+The configuration file controls the server behavior, audio quality, sources, and cluster scaling.
+
+## Server Settings
+
+Core settings for the server instance.
+
+<TypeTable
+  type={{
+    host: {
+      description: 'The IP address to bind the server to.',
+      type: 'string',
+      default: '"0.0.0.0"'
+    },
+    port: {
+      description: 'The port to listen on.',
+      type: 'number',
+      default: '3000'
+    },
+    password: {
+      description: 'Authentication password for clients.',
+      type: 'string',
+      default: '"youshallnotpass"'
+    },
+    useBunServer: {
+      description: 'Set to true to use Bun.serve websocket implementation.',
+      type: 'boolean',
+      default: 'false'
+    }
+  }}
+/>
+
+<Callout type="warn" title="Experimental Feature">
+  `useBunServer` is currently experimental. Use with caution in production environments.
+</Callout>
+
+---
+
+## Cluster & Scaling
+
+Settings related to worker clustering and auto-scaling behavior.
+
+### General Cluster Options
+
+<TypeTable
+  type={{
+    enabled: {
+      description: 'Activates clustering mode. Can also be set via env CLUSTER_ENABLED.',
+      type: 'boolean',
+      default: 'true'
+    },
+    workers: {
+      description: 'Number of workers to spawn. 0 uses os.cpus().length.',
+      type: 'number',
+      default: '0'
+    },
+    minWorkers: {
+      description: 'Minimum workers to keep alive to improve availability during bursts.',
+      type: 'number',
+      default: '1'
+    },
+    commandTimeout: {
+      description: 'Timeout (ms) for heavy operations like loadTracks.',
+      type: 'number',
+      default: '6000'
+    },
+    fastCommandTimeout: {
+      description: 'Timeout (ms) for fast player commands like play/pause.',
+      type: 'number',
+      default: '4000'
+    },
+    maxRetries: {
+      description: 'Number of retry attempts on timeout or worker failure.',
+      type: 'number',
+      default: '2'
+    }
+  }}
+/>
+
+### Scaling Configuration
+
+These settings control the `cluster.scaling` behavior.
+
+<TypeTable
+  type={{
+    maxPlayersPerWorker: {
+      description: 'Reference capacity for utilization calculation.',
+      type: 'number',
+      default: '20'
+    },
+    targetUtilization: {
+      description: 'Target utilization factor for scaling logic.',
+      type: 'number',
+      default: '0.7'
+    },
+    scaleUpThreshold: {
+      description: 'Utilization threshold (0.0 - 1.0) to trigger scaling up.',
+      type: 'number',
+      default: '0.75'
+    },
+    scaleDownThreshold: {
+      description: 'Utilization threshold (0.0 - 1.0) to trigger scaling down.',
+      type: 'number',
+      default: '0.3'
+    },
+    checkIntervalMs: {
+      description: 'Interval (ms) to check for scaling needs.',
+      type: 'number',
+      default: '5000'
+    },
+    idleWorkerTimeoutMs: {
+      description: 'Time (ms) an idle worker waits before being removed.',
+      type: 'number',
+      default: '60000'
+    },
+    queueLengthScaleUpFactor: {
+      description: 'How many commands in queue per active worker trigger scale up.',
+      type: 'number',
+      default: '5'
+    }
+  }}
+/>
+
+---
+
+## Audio & Player
+
+Configuration for audio quality, updates, and playback behavior.
+
+<TypeTable
+  type={{
+    'audio.quality': {
+      description: 'Preferred audio quality.',
+      type: 'string',
+      default: '"high"'
+    },
+    'audio.encryption': {
+      description: 'Encryption method for packets.',
+      type: 'string',
+      default: '"aead_aes256_gcm_rtpsize"'
+    },
+    'audio.resamplingQuality': {
+      description: 'Resampling strategy.',
+      type: 'string',
+      default: '"best"'
+    },
+    playerUpdateInterval: {
+      description: 'How often player updates are sent to the client (ms).',
+      type: 'number',
+      default: '2000'
+    },
+    trackStuckThresholdMs: {
+      description: 'Time to wait before declaring a track stuck.',
+      type: 'number',
+      default: '10000'
+    },
+    zombieThresholdMs: {
+      description: 'Threshold to detect zombie connections.',
+      type: 'number',
+      default: '60000'
+    },
+    enableHoloTracks: {
+      description: 'Enables HoloTracks functionality.',
+      type: 'boolean',
+      default: 'true'
+    }
+  }}
+/>
+
+---
+
+## Sources
+
+Configuration for specific music and media providers.
+
+### Primary Platforms
+
+<TypeTable
+  type={{
+    defaultSearchSource: {
+      description: 'The default source used when none is specified.',
+      type: 'string',
+      default: '"youtube"'
+    },
+    unifiedSearchSources: {
+      description: 'Sources included in unified search.',
+      type: 'string[]',
+      default: '["youtube", "soundcloud"]'
+    }
+  }}
+/>
+
+### YouTube
+
+<TypeTable
+  type={{
+    enabled: { type: 'boolean', default: 'true' },
+    allowItag: { 
+      description: 'Additional itags for audio streams (e.g., [140, 141]).',
+      type: 'number[]', 
+      default: '[]' 
+    },
+    targetItag: { 
+      description: 'Force a specific itag, overriding quality options.',
+      type: 'number | null', 
+      default: 'null' 
+    },
+    'clients.search': {
+      description: 'Clients used for searching.',
+      type: 'string[]',
+      default: '["Android"]'
+    },
+    'clients.playback': {
+      description: 'Clients used for playback.',
+      type: 'string[]',
+      default: '["AndroidVR", "TV", "TVEmbedded", "IOS"]'
+    },
+    'cipher.url': {
+      description: 'URL for the signature cipher service.',
+      type: 'string',
+      default: '"http://127.0.0.1:8001"'
+    }
+  }}
+/>
+
+### Spotify
+
+<TypeTable
+  type={{
+    enabled: { type: 'boolean', default: 'true' },
+    clientId: { type: 'string', default: '""' },
+    clientSecret: { type: 'string', default: '""' },
+    market: { type: 'string', default: '"US"' },
+    playlistLoadLimit: { 
+      description: 'Pages to load (1 = 100 tracks). 0 for no limit.',
+      type: 'number', 
+      default: '1' 
+    },
+    playlistPageLoadConcurrency: { type: 'number', default: '10' },
+    allowExplicit: { type: 'boolean', default: 'true' }
+  }}
+/>
+
+### Apple Music
+
+<TypeTable
+  type={{
+    enabled: { type: 'boolean', default: 'true' },
+    mediaApiToken: { 
+      description: 'Manually provide token or use "token_here" for auto-fetch.',
+      type: 'string', 
+      default: '"token_here"' 
+    },
+    playlistLoadLimit: { type: 'number', default: '0' },
+    allowExplicit: { type: 'boolean', default: 'true' }
+  }}
+/>
+
+### Tidal
+
+<TypeTable
+  type={{
+    enabled: { type: 'boolean', default: 'true' },
+    token: { 
+      description: 'Auth token (get from web player devtools).',
+      type: 'string', 
+      default: '""' 
+    },
+    countryCode: { type: 'string', default: '"US"' }
+  }}
+/>
+
+### Other Sources
+
+<TypeTable
+  type={{
+    deezer: { description: 'Enabled by default. Supports ARL/Decryption Key.', type: 'object' },
+    jiosaavn: { description: 'Supports playlist/artist load limits.', type: 'object' },
+    pandora: { description: 'May require manual CSRF token due to region locks.', type: 'object' },
+    local: { description: 'Local file playback. Base path configurable.', type: 'object' },
+    http: { description: 'Direct HTTP stream playback.', type: 'boolean' }
+  }}
+/>
+
+---
+
+## Lyrics
+
+Configuration for lyrics providers.
+
+<TypeTable
+  type={{
+    fallbackSource: {
+      description: 'Source to use if the primary fails.',
+      type: 'string',
+      default: '"genius"'
+    },
+    'applemusic.advanceSearch': {
+      description: 'Uses YTMusic to match title/artist for better accuracy.',
+      type: 'boolean',
+      default: 'true'
+    }
+  }}
+/>
+
+**Supported Providers:** YouTube, Genius, Musixmatch, LRCLib, Apple Music.
+
+---
+
+## Security & Rate Limiting
+
+### DOS Protection
+
+<TypeTable
+  type={{
+    enabled: { type: 'boolean', default: 'true' },
+    'thresholds.burstRequests': { type: 'number', default: '50' },
+    'thresholds.timeWindowMs': { type: 'number', default: '10000' },
+    'mitigation.blockDurationMs': { type: 'number', default: '300000' }
+  }}
+/>
+
+### Rate Limit (Global & Per Entity)
+
+<TypeTable
+  type={{
+    enabled: { type: 'boolean', default: 'true' },
+    'global.maxRequests': { type: 'number', default: '1000' },
+    'perIp.maxRequests': { type: 'number', default: '100' },
+    'perUserId.maxRequests': { type: 'number', default: '50' },
+    'perGuildId.maxRequests': { type: 'number', default: '20' }
+  }}
+/>
+
+### Route Planner (IP Rotation)
+
+<TypeTable
+  type={{
+    strategy: {
+      description: 'Strategy for IP rotation (RotateOnBan, RoundRobin, LoadBalance).',
+      type: 'string',
+      default: '"RotateOnBan"'
+    },
+    bannedIpCooldown: {
+      description: 'Time (ms) an IP remains banned.',
+      type: 'number',
+      default: '600000'
+    },
+    ipBlocks: {
+      description: 'List of IP blocks to use.',
+      type: 'string[]',
+      default: '[]'
+    }
+  }}
+/>
+
+---
+
+## Logging & Metrics
+
+<TypeTable
+  type={{
+    'logging.level': {
+      type: 'string',
+      default: '"debug"'
+    },
+    'logging.file.enabled': {
+      type: 'boolean',
+      default: 'false'
+    },
+    'metrics.enabled': {
+      type: 'boolean',
+      default: 'false'
+    },
+    'metrics.authorization.type': {
+      type: 'string',
+      default: '"Bearer"'
+    }
+  }}
+/>
