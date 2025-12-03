@@ -1,13 +1,179 @@
 ---
-title: Hello World
-description: Your first document
+title: Welcome to NodeLink
+description: Where lightness meets sound. 🌿
 ---
 
-Welcome to the docs! You can start writing documents in `/content/docs`.
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+import { Card, Cards } from 'fumadocs-ui/components/card';
 
-## What is Next?
+# HELLOOOOOOOOOOO WORLD! 👋
+
+Welcome to the **NodeLink** documentation!
+
+If you are here, you are probably looking for an audio server that flows with your code. You want something that feels natural, something that you can tinker with, break, and fix again.
+
+**You are in the right place.**
+
+NodeLink was born from a simple desire: to understand and master every detail of an audio server. It is **100% Node.js**, lightweight, modular, and built with passion.
+
+<Callout type="info" title="The Philosophy">
+  It doesn’t try to reinvent the wheel — it just makes it spin in our own rhythm.
+</Callout>
+
+---
+
+## NodeLink? Why though? Seriously, why?
+
+We love the existing options. Truly. But sometimes, you just want to build in the language you speak every day.
+
+We built NodeLink because we wanted a server that felt like home. We wanted to peek under the hood, see the gears turning, and understand the magic of audio processing without switching contexts.
+
+<Accordions>
+  <Accordion title="We speak your language 💛" id="js">
+    If you write your bot in **JavaScript** or **TypeScript**, NodeLink feels like a natural extension of your project. It fits right into your existing ecosystem, making debugging and contributing a breeze.
+  </Accordion>
+  <Accordion title="Sources? Handled. 🎵" id="sources">
+    We aim for simplicity. NodeLink handles the complexities of various source managers internally, so you can focus on playing music rather than fighting with configuration files and access tokens.
+  </Accordion>
+  <Accordion title="Stability First 💪" id="stability">
+    We utilize a **worker-based architecture**. This ensures that heavy tasks like parsing playlists happen in separate processes, keeping your main audio loop smooth and uninterrupted.
+  </Accordion>
+</Accordions>
+
+### The Real Truth
+
+It's about **control** and **knowledge**.
+
+You can go deeper into anything here. If you don't know how something works, **go deep**. Learn it. Imagine it. Search for it. Run after it. Find it.
+
+> If you don't seek knowledge, it won't just fall into your hands.
+
+We built this so you can read the code, understand the stack traces, and realize that **you can do anything**. Don't let anyone tell you otherwise. The code is open. The door is open. Come in and build something amazing. 💙
+
+---
+## Let's get you running
+
+Enough talking, let's make some noise. NodeLink requires only Node.js, which runs on Linux, Windows, and macOS.
+
+<Steps>
+  <Step>
+    ### Prerequisites
+    
+    Before we start, make sure you have **Node.js (v22+)** and **Git** installed.
+    
+    <Tabs items={['Windows', 'Linux', 'macOS']}>
+      <Tab value="Windows">
+        The easiest way is using `winget` in PowerShell:
+        ```powershell
+        winget install OpenJS.NodeJS
+        winget install Git.Git
+        ```
+        *Alternatively, download the installers from [nodejs.org](https://nodejs.org) and [git-scm.com](https://git-scm.com).*
+      </Tab>
+      <Tab value="Linux">
+        Using a package manager (Ubuntu/Debian example):
+        ```bash
+        # Install Git
+        sudo apt update && sudo apt install git -y
+        
+        # Install Node.js 22.x
+        curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+        sudo apt-get install -y nodejs
+        ```
+      </Tab>
+      <Tab value="macOS">
+        If you have **Homebrew** installed, it's a breeze:
+        ```bash
+        brew install node
+        brew install git
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step>
+    ### Clone the Magic
+    
+    Bring the project to your machine.
+    
+    ```bash
+    git clone https://github.com/PerformanC/NodeLink.git
+    cd NodeLink
+    ```
+  </Step>
+
+  <Step>
+    ### Install Dependencies
+    
+    Install the project dependencies using your preferred package manager.
+    
+    <Tabs items={['npm', 'yarn', 'pnpm', 'bun']}>
+      <Tab value="npm">
+        ```bash
+        npm install
+        ```
+      </Tab>
+      <Tab value="yarn">
+        ```bash
+        yarn install
+        ```
+      </Tab>
+      <Tab value="pnpm">
+        ```bash
+        pnpm install
+        ```
+      </Tab>
+      <Tab value="bun">
+        ```bash
+        bun install
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step>
+    ### Config & Fly
+    
+    Copy the default configuration and start the server.
+    
+    <Tabs items={['Bash (Linux/macOS)', 'PowerShell (Windows)', 'CMD (Windows)']}>
+      <Tab value="Bash (Linux/macOS)">
+        ```bash
+        cp config.default.js config.js
+        npm run start
+        ```
+      </Tab>
+      <Tab value="PowerShell (Windows)">
+        ```powershell
+        Copy-Item config.default.js -Destination config.js
+        npm run start
+        ```
+      </Tab>
+      <Tab value="CMD (Windows)">
+        ```cmd
+        copy config.default.js config.js
+        npm run start
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
+
+<Callout type="warn" title="Heads up!">
+  If anything strange happens, report it on our GitHub or join our Discord!  
+  Fast feedback means fast fixes. Thanks to everyone helping improve NodeLink. 💙
+</Callout>
+
+## Where to go next?
 
 <Cards>
-  <Card title="Learn more about Next.js" href="https://nextjs.org/docs" />
-  <Card title="Learn more about Fumadocs" href="https://fumadocs.dev" />
+  <Card title="Configuration" href="/docs/config">
+    Tweak the engine. Configure your sources, filters, and limits.
+  </Card>
+  <Card title="API Reference" href="/docs/API">
+    For the curious minds who want to see the raw endpoints.
+  </Card>
 </Cards>

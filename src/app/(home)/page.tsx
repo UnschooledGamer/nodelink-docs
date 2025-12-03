@@ -14,7 +14,7 @@ export default function HomePage() {
           <img
             src="https://github.com/1Lucas1apk/lab/blob/master/mwc2h6q%20-%20Imgur.png?raw=true"
             alt="NodeLink Banner"
-            className="relative w-48 md:w-64 h-auto rounded-xl shadow-lg border border-fd-border bg-fd-card"
+            className="relative w-full h-auto rounded-xl shadow-lg border border-fd-border bg-fd-card"
           />
         </div>
 

@@ -1,0 +1,184 @@
+---
+title: Troubleshooting
+description: Common issues and how to fix them (Programmed by humans!)
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# Common Problems
+
+<Callout type="warn" title="A Note on Humanity">
+  NodeLink was recently rewritten from the ground up. While we strive for perfection, we are humans (mostly), and humans make mistakes. If you encounter something that isn't listed here or seems like a bug, please join our [PerformanC Discord](https://discord.gg/uPveNfTuCJ) or [Ecliptia Discord](https://discord.gg/fzjksWS65v) and let us know!
+</Callout>
+
+Here are specific errors you might encounter in your console or logs, and exactly what they mean.
+
+## Startup & Connection Errors
+
+<TroubleshootingCard 
+  title="Port Already in Use" 
+  type="error"
+  fields={[
+    { name: "Error", value: "EADDRINUSE", inline: true },
+    { name: "Code", value: "System", inline: true },
+    { name: "Solution", value: "Kill Process / Change Port", inline: true }
+  ]}
+>
+  **Message:** `Port 3000 is already in use.`
+  
+  Another application (or a zombie instance of NodeLink) is already running on the port you configured.
+  
+  *   **Linux/Mac:** Run `lsof -i :3000` to see what's using it, then `kill -9 <PID>`.
+  *   **Windows:** Use Task Manager or `netstat -ano | findstr :3000`.
+  *   **Alternative:** Change `server.port` in your `config.js`.
+</TroubleshootingCard>
+
+<TroubleshootingCard 
+  title="Unauthorized Connection" 
+  type="warn"
+  fields={[
+    { name: "Status", value: "401 Unauthorized", inline: true },
+    { name: "Reason", value: "Invalid Password / Client Name", inline: true }
+  ]}
+>
+  **Message:** `Unauthorized connection attempt from [IP] - Invalid password provided`
+  
+  Your Lavalink client (the bot) is sending a password that does not match `server.password` in `config.js`.
+  
+  *   **Check:** Ensure both your bot's config and NodeLink's config match exactly.
+  *   **Client Name:** Some clients fail to send a `Client-Name` header. NodeLink rejects these connections. Ensure your client library is up to date.
+</TroubleshootingCard>
+
+## YouTube Specifics
+
+<TroubleshootingCard 
+  title="Cipher Server Unavailable" 
+  type="error"
+  fields={[
+    { name: "Source", value: "YouTube", inline: true },
+    { name: "Impact", value: "Playback Failure", inline: true },
+    { name: "Fix", value: "Check Cipher URL", inline: true }
+  ]}
+>
+  **Message:** `Cipher server at ... is offline or unreachable.`
+  
+  NodeLink relies on a signature deciphering service (like the one hosted by Kikkia) to play YouTube videos.
+  
+  *   **Check Config:** Look at `sources.youtube.cipher.url` in `config.js`.
+  *   **Status:** The public server might be down. You may need to host your own or find an alternative.
+</TroubleshootingCard>
+
+<TroubleshootingCard 
+  title="Age Restricted / Login Required" 
+  type="warn"
+  fields={[
+    { name: "Source", value: "YouTube", inline: true },
+    { name: "Error", value: "Sign in to confirm your age", inline: true }
+  ]}
+>
+  Some videos require a logged-in account. NodeLink attempts to use OAuth tokens if configured, but they can expire.
+  
+  *   **OAuth:** Set `sources.youtube.getOAuthToken` to `true` in config, restart, and follow the instructions in the console to refresh your token.
+  *   **TV Client:** We simulate a TV client to bypass some restrictions, but `refreshToken` must be valid.
+</TroubleshootingCard>
+
+## Voice & Audio
+
+<TroubleshootingCard 
+  title="Voice Connection Not Ready" 
+  type="error"
+  fields={[
+    { name: "Error", value: "Voice connection is not ready", inline: true },
+    { name: "Cause", value: "UDP Blocking / Firewall", inline: true }
+  ]}
+>
+  **Message:** `Voice connection for guild ... is not ready (missing UDP info).`
+  
+  NodeLink connected to Discord's WebSocket, but failed to establish the UDP connection required to send audio.
+  
+  *   **Firewall:** Ensure your server allows **outgoing UDP** traffic to high ports.
+  *   **Docker:** If running in Docker, ensure you aren't blocking UDP.
+  *   **Discord:** Sometimes Discord's voice servers are just having a bad day.
+</TroubleshootingCard>
+
+<TroubleshootingCard 
+  title="Decoder / Native Module Issues" 
+  type="error"
+  fields={[
+    { name: "Component", value: "Opus / Sodium", inline: true },
+    { name: "Impact", value: "Performance / Crash", inline: true }
+  ]}
+>
+  NodeLink relies on native modules like `sodium-native` and `opusscript` (or others) for encryption and encoding.
+  
+  *   If you see errors related to `sodium` or `opus`, try reinstalling dependencies: `rm -rf node_modules && npm install`.
+  *   Ensure you have build tools installed (Python, C++ compiler) if you are building from source.
+</TroubleshootingCard>
+
+## Worker & Process Issues
+
+<TroubleshootingCard 
+  title="Worker Died / Crash" 
+  type="error"
+  fields={[
+    { name: "Event", value: "WorkerFailedEvent", inline: true },
+    { name: "Scope", value: "Clustering", inline: true },
+    { name: "Action", value: "Report Immediately", inline: true }
+  ]}
+>
+  If a worker process dies, it usually means something went very wrong internally. NodeLink isolates players in workers, so if a worker fails, it dumps the error and the responsibility back to the main process (and you).
+  
+  **What to do:**
+  1.  Enable debug logging in `config.js` (set `logging.level` to `'debug'`) to catch the stack trace.
+  2.  This is likely a bug in the core logic. Please copy the logs and report it on our Discord servers.
+</TroubleshootingCard>
+
+## Configuration & Updates
+
+<TroubleshootingCard 
+  title="Missing Configuration Options" 
+  type="warn"
+  fields={[
+    { name: "Symptom", value: "Feature Not Working / Error", inline: true },
+    { name: "Source", value: "config.js", inline: true },
+    { name: "Fix", value: "Check Default Config", inline: true }
+  ]}
+>
+  NodeLink evolves fast. If you updated the server but forgot to update your `config.js`, you might be missing critical settings.
+  
+  Always check the `config.default.js` file in the root directory after an update. It contains the source of truth for all available options. If an option says it doesn't exist, it probably just needs to be copied over.
+</TroubleshootingCard>
+
+## Connection & Network
+
+<TroubleshootingCard 
+  title="Network Instability" 
+  type="error"
+  fields={[
+    { name: "Error", value: "ECONNRESET", inline: true },
+    { name: "Scope", value: "Sources / Network", inline: true },
+    { name: "Recovery", value: "Automatic", inline: true }
+  ]}
+>
+  NodeLink includes a recovery system that attempts to handle disconnections gracefully. However, if you see frequent `ECONNRESET` errors, check your environment:
+  
+  *   **Firewalls:** Ensure nothing is aggressively terminating long-lived connections or blocking specific packets.
+  *   **Router Channels:** Some routers automatically switch WiFi channels (frequencies) to "optimize" the network. When this happens (channel 1 &rarr; 6, for example), the router often momentarily disconnects all clients to re-establish the link on the new frequency. This brief interruption is enough to kill an active stream.
+  *   **YouTube:** Sometimes YouTube simply closes the connection. This is "normal" behavior we try to mitigate.
+</TroubleshootingCard>
+
+## Limits & Protection
+
+<TroubleshootingCard 
+  title="Rate Limiting" 
+  type="info"
+  fields={[
+    { name: "Status", value: "429 Too Many Requests", inline: true },
+    { name: "Component", value: "RateLimitManager", inline: true },
+    { name: "Action", value: "Disable Config", inline: true }
+  ]}
+>
+  NodeLink protects itself with a built-in rate limiter and DoS protection system. If you are running a **private** client that executes many requests in a few seconds (e.g., a dashboard or heavy load testing), you might trigger these protections. 
+  
+  It is recommended to **disable** `rateLimit` and `dosProtection` in your configuration if you trust the clients connecting to your node.
+</TroubleshootingCard>
