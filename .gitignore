@@ -10,6 +10,7 @@
 /out/
 /build
 *.tsbuildinfo
+.open-next
 
 # misc
 .DS_Store
@@ -24,3 +25,4 @@ yarn-error.log*
 .env*.local
 .vercel
 next-env.d.ts
+package-lock.json
