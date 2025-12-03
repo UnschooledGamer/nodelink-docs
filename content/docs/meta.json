@@ -1,0 +1,13 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "docker",
+    "config",
+    "api",
+    "advenced",
+    "differences",
+    "prometheus",
+    "troubleshooting"
+  ]
+}

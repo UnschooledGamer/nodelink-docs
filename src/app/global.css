@@ -1,3 +1,21 @@
 @import 'tailwindcss';
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
+
+/* Code block specific fixes - tight line spacing */
+pre code {
+  line-height: 1.4 !important;
+}
+
+.shiki code > span {
+  line-height: 1.4 !important;
+}
+
+/* Remove extra spacing in code blocks */
+.shiki pre {
+  line-height: 1.4 !important;
+}
+
+pre {
+  line-height: 1.4 !important;
+}

@@ -1,0 +1,909 @@
+---
+title: REST API
+description: HTTP endpoints for managing audio and sessions.
+---
+
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+import { ApiCard, ApiSection, ApiSchema } from '@/components/api-ui';
+
+# REST API
+
+The REST API allows you to manage sessions, players, and resolve audio tracks. All endpoints are prefixed with `/v4`.
+
+## Tracks & Items
+
+<ApiCard name="LoadTracks" method="GET" url="/v4/loadtracks" description="Resolves audio tracks for use in playback. Supports direct URLs, search queries, and playlists.">
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/v4/loadtracks?identifier=ytsearch:never%20gonna%20give%20you%20up" \
+     -H "Authorization: yourPassword"
+```
+  </ApiSection>
+  <ApiSection title="Query Parameters">
+    <ApiSchema name="identifier" type="string" required description="URL, search query (prefix: ytsearch:, spsearch:, scsearch:), or playlist URL" />
+  </ApiSection>
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="Single Track">
+```json
+{
+  "loadType": "track",
+  "data": {
+    "encoded": "QAAAjQIAJVJpY2sgQXN0bGV5...",
+    "info": {
+      "identifier": "dQw4w9WgXcQ",
+      "isSeekable": true,
+      "author": "Rick Astley",
+      "length": 212000,
+      "isStream": false,
+      "position": 0,
+      "title": "Never Gonna Give You Up",
+      "uri": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "artworkUrl": "https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+      "isrc": null,
+      "sourceName": "youtube"
+    },
+    "pluginInfo": {}
+  }
+}
+```
+      </Accordion>
+      <Accordion title="Search Results">
+```json
+{
+  "loadType": "search",
+  "data": [
+    {
+      "encoded": "QAAAjQIAJVJpY2sgQXN0bGV5...",
+      "info": {
+        "identifier": "dQw4w9WgXcQ",
+        "title": "Never Gonna Give You Up",
+        "author": "Rick Astley",
+        "length": 212000,
+        "isSeekable": true,
+        "isStream": false,
+        "uri": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "sourceName": "youtube"
+      }
+    }
+  ]
+}
+```
+      </Accordion>
+      <Accordion title="Playlist">
+```json
+{
+  "loadType": "playlist",
+  "data": {
+    "info": {
+      "name": "My Playlist",
+      "selectedTrack": 0
+    },
+    "pluginInfo": {},
+    "tracks": [
+      {
+        "encoded": "QAAAjQIAJVJpY2sgQXN0bGV5...",
+        "info": {
+          "identifier": "dQw4w9WgXcQ",
+          "title": "Never Gonna Give You Up",
+          "author": "Rick Astley",
+          "length": 212000,
+          "sourceName": "youtube"
+        }
+      }
+    ]
+  }
+}
+```
+      </Accordion>
+      <Accordion title="No Matches">
+```json
+{
+  "loadType": "empty",
+  "data": {}
+}
+```
+      </Accordion>
+      <Accordion title="Load Failed">
+```json
+{
+  "loadType": "error",
+  "data": {
+    "message": "Failed to load track",
+    "severity": "common",
+    "cause": "Video unavailable"
+  }
+}
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="DecodeTrack" method="GET" url="/v4/decodetrack" description="Decodes a base64 encoded track string into track information.">
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/v4/decodetrack?encodedTrack=QAAAjQIAJVJpY2sgQXN0bGV5..." \
+     -H "Authorization: yourPassword"
+```
+  </ApiSection>
+  <ApiSection title="Query Parameters">
+    <ApiSchema name="encodedTrack" type="string" required description="The base64 encoded track string" />
+  </ApiSection>
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="Example Response">
+```json
+{
+  "encoded": "QAAAjQIAJVJpY2sgQXN0bGV5...",
+  "info": {
+    "title": "Never Gonna Give You Up",
+    "author": "Rick Astley",
+    "length": 212000,
+    "identifier": "dQw4w9WgXcQ",
+    "isSeekable": true,
+    "isStream": false,
+    "uri": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "artworkUrl": "https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+    "isrc": null,
+    "sourceName": "youtube",
+    "position": 0
+  },
+  "pluginInfo": {},
+  "userData": {}
+}
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="DecodeTracks" method="POST" url="/v4/decodetracks" description="Decodes multiple base64 encoded track strings at once.">
+  <ApiSection title="Example Request">
+```bash
+curl -X POST "http://your-server.com/v4/decodetracks" \
+     -H "Authorization: yourPassword" \
+     -H "Content-Type: application/json" \
+     -d '["QAAAjQIAJVJpY2sgQXN0bGV5...","QAAAkAIAJU90aGVyIFRyYWNr..."]'
+```
+  </ApiSection>
+  <ApiSection title="Body">
+    <ApiSchema name="tracks" type="string[]" required description="Array of base64 encoded track strings" />
+  </ApiSection>
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="Example Response">
+```json
+[
+  {
+    "encoded": "QAAAjQIAJVJpY2sgQXN0bGV5...",
+    "info": {
+      "title": "Never Gonna Give You Up",
+      "author": "Rick Astley",
+      "length": 213000,
+      "identifier": "dQw4w9WgXcQ",
+      "isSeekable": true,
+      "isStream": false,
+      "uri": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "sourceName": "youtube"
+    },
+    "pluginInfo": {},
+    "userData": {}
+  }
+]
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="EncodeTrack" method="GET" url="/v4/encodetrack" description="Encodes a track object into a base64 string.">
+  <ApiSection title="Query Parameters">
+    <ApiSchema name="track" type="object" required description="The track object to encode." />
+  </ApiSection>
+
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="Example Response">
+
+```json
+"BASE64_ENCODED_TRACK_STRING_HERE"
+```
+
+</Accordion>
+    </Accordions>
+  </ApiSection>
+  <ApiSection title="Example Request">
+
+```bash
+curl -X GET "http://your-server.com/v4/encodetrack?track=%7B%22identifier%22%3A%22test%22%2C%22title%22%3A%22Test%20Track%22%2C%22author%22%3A%22Test%22%2C%22uri%22%3A%22https%3A%2F%2Fexample.com%2Ftest.mp3%22%2C%22sourceName%22%3A%22http%22%7D" \
+     -H "Authorization: yourPassword"
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="EncodeTrack" method="GET" url="/v4/encodetrack" description="Encodes a track object into a base64 string.">
+  <ApiSection title="Query Parameters">
+    <ApiSchema name="track" type="object" required description="The track object to encode (URL encoded JSON)" />
+  </ApiSection>
+
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/v4/encodetrack?track=%7B%22identifier%22%3A%22test%22%2C%22title%22%3A%22Test%20Track%22%2C%22author%22%3A%22Test%22%2C%22uri%22%3A%22https%3A%2F%2Fexample.com%2Ftest.mp3%22%2C%22sourceName%22%3A%22http%22%7D" \
+     -H "Authorization: yourPassword"
+```
+  </ApiSection>
+
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="Example Response">
+```json
+"BASE64_ENCODED_TRACK_STRING_HERE"
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="EncodeTracks" method="POST" url="/v4/encodedtracks" description="Encodes multiple track objects into base64 strings at once.">
+  <ApiSection title="Body">
+Array of track objects to encode, where each track has:
+    <ApiSchema name="encoded" type="string" description="Existing encoded track (if re-encoding)" />
+    <ApiSchema name="info" type="object" description="Track info object with identifier, title, author, uri, sourceName, etc." />
+  </ApiSection>
+
+  <ApiSection title="Example Request">
+```bash
+curl -X POST "http://your-server.com/v4/encodedtracks" \
+     -H "Authorization: yourPassword" \
+     -H "Content-Type: application/json" \
+     -d '[
+       {
+         "info": {
+           "identifier": "test1",
+           "title": "Test Track 1",
+           "author": "Artist",
+           "uri": "https://example.com/track1.mp3",
+           "sourceName": "http"
+         }
+       },
+       {
+         "info": {
+           "identifier": "test2",
+           "title": "Test Track 2",
+           "author": "Artist",
+           "uri": "https://example.com/track2.mp3",
+           "sourceName": "http"
+         }
+       }
+     ]'
+```
+  </ApiSection>
+
+  <ApiSection title="Response">
+Returns an array of base64 encoded track strings in the same order as the input.
+  </ApiSection>
+</ApiCard>
+
+## Players & Sessions
+
+<ApiCard name="GetPlayers" method="GET" url="/v4/sessions/{sessionId}/players" description="Returns all players in the specified session.">
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/v4/sessions/yourSessionId/players" \
+     -H "Authorization: yourPassword"
+```
+  </ApiSection>
+  
+  <ApiSection title="Response">
+Returns an array of player objects for all active guilds in this session.
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="GetPlayer" method="GET" url="/v4/sessions/{sessionId}/players/{guildId}" description="Returns the player for a specific guild.">
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/v4/sessions/yourSessionId/players/yourGuildId" \
+     -H "Authorization: yourPassword"
+```
+  </ApiSection>
+  
+  <ApiSection title="Response">
+Returns the player object including current track, volume, filters, and voice state.
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="UpdatePlayer" method="PATCH" url="/v4/sessions/{sessionId}/players/{guildId}" description="Updates or creates a player for a guild.">
+  <ApiSection title="Query Parameters">
+    <ApiSchema name="noReplace" type="boolean" description="If true, won't replace the currently playing track with the new one" />
+  </ApiSection>
+  
+  <ApiSection title="Body Parameters">
+    <ApiSchema name="track.encoded" type="string" description="Base64 encoded track to play (null to stop)" />
+    <ApiSchema name="track.identifier" type="string" description="Track identifier to resolve and play" />
+    <ApiSchema name="track.userData" type="object" description="Custom data to attach to the track" />
+    <ApiSchema name="position" type="number" description="Track position in milliseconds (min: 0)" />
+    <ApiSchema name="endTime" type="number" description="When to stop the track in milliseconds (null to reset)" />
+    <ApiSchema name="volume" type="number" description="Player volume from 0 to 1000 (100 = 100%)" />
+    <ApiSchema name="paused" type="boolean" description="Whether the player should be paused" />
+    <ApiSchema name="filters" type="object" description="Audio filters to apply (see Filters section)" />
+    <ApiSchema name="voice.token" type="string" description="Discord voice token" />
+    <ApiSchema name="voice.endpoint" type="string" description="Discord voice endpoint" />
+    <ApiSchema name="voice.sessionId" type="string" description="Discord voice session ID" />
+  </ApiSection>
+  <ApiSection title="Example Request">
+
+```bash
+curl -X PATCH "http://your-server.com/v4/sessions/yourSessionId/players/yourGuildId?noReplace=false" \
+     -H "Authorization: yourPassword" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "track": {
+         "encoded": "QAAAjQIAJVJpY2sgQXN0bGV5..."
+       },
+       "volume": 100,
+       "filters": {
+         "equalizer": [
+           {"band": 0, "gain": 0.2}
+         ]
+       }
+     }'
+```
+  </ApiSection>
+  
+  <ApiSection title="Response">
+Returns the updated player object with all current settings.
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="DestroyPlayer" method="DELETE" url="/v4/sessions/{sessionId}/players/{guildId}" description="Destroys the player for a guild.">
+  <ApiSection title="Example Request">
+
+```bash
+curl -X DELETE "http://your-server.com/v4/sessions/yourSessionId/players/yourGuildId" \
+          -H "Authorization: yourPassword"
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="UpdateSession" method="PATCH" url="/v4/sessions/{sessionId}" description="Updates session configuration.">
+  <ApiSection title="Body">
+    <ApiSchema name="resuming" type="boolean" description="Whether resuming is enabled for this session." />
+    <ApiSchema name="timeout" type="number" description="The timeout in seconds for resuming." />
+  </ApiSection>
+  <ApiSection title="Example Request">
+
+```bash
+curl -X PATCH "http://your-server.com/v4/sessions/yourSessionId" \
+          -H "Authorization: yourPassword" \
+          -H "Content-Type: application/json" \
+          -d '{"resuming": true, "timeout": 300}'
+```
+  </ApiSection>
+</ApiCard>
+
+## Node Information
+
+<ApiCard name="GetConnection" method="GET" url="/v4/connection" description="Returns the connection manager status and metrics.">
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/v4/connection" \
+     -H "Authorization: yourPassword"
+```
+  </ApiSection>
+  
+  <ApiSection title="Response">
+Returns connection status and detailed metrics about active connections, including WebSocket connections and voice channels.
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="GetInfo" method="GET" url="/v4/info" description="Returns detailed information about the NodeLink server, including version, supported sources, filters, and build information.">
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/v4/info" \
+     -H "Authorization: yourPassword"
+```
+  </ApiSection>
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="Example Response">
+```json
+{
+  "version": {
+    "semver": "3.1.1",
+    "major": 3,
+    "minor": 1,
+    "patch": 1,
+    "prerelease": [],
+    "build": []
+  },
+  "buildTime": 1764691522000,
+  "git": {
+    "branch": "v3",
+    "commit": "b2814b1",
+    "commitTime": 1764691522000
+  },
+  "node": "v25.2.1",
+  "voice": {
+    "name": "@performanc/voice",
+    "version": "github:PerformanC/voice"
+  },
+  "isNodelink": true,
+  "sourceManagers": [
+    "youtube",
+    "spotify",
+    "soundcloud",
+    "applemusic",
+    "deezer",
+    "bandcamp",
+    "twitch",
+    "http",
+    "local"
+  ],
+  "filters": [
+    "equalizer",
+    "karaoke",
+    "timescale",
+    "tremolo",
+    "vibrato",
+    "rotation",
+    "distortion",
+    "channelMix",
+    "lowpass",
+    "highpass"
+  ],
+  "plugins": []
+}
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="GetStats" method="GET" url="/v4/stats" description="Returns real-time statistics about server resource usage, active players, and detailed metrics.">
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/v4/stats" \
+     -H "Authorization: yourPassword"
+```
+  </ApiSection>
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="Example Response">
+```json
+{
+  "players": 0,
+  "playingPlayers": 0,
+  "uptime": 17930,
+  "memory": {
+    "free": 904605696,
+    "used": 39914392,
+    "allocated": 51482624,
+    "reservable": 8011513856
+  },
+  "cpu": {
+    "cores": 12,
+    "systemLoad": 0.93,
+    "nodelinkLoad": 0
+  },
+  "frameStats": null,
+  "detailedStats": {
+    "api": {
+      "requests": {
+        "/v4/stats": 1,
+        "/v4/info": 5,
+        "/v4/loadtracks": 23
+      },
+      "errors": {}
+    },
+    "sources": {
+      "youtube": 15,
+      "spotify": 8
+    },
+    "playback": {
+      "events": {
+        "TrackStartEvent": 10,
+        "TrackEndEvent": 9
+      }
+    }
+  }
+}
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="GetVersion" method="GET" url="/version" description="Returns the plain text version of NodeLink. Note: This endpoint is at /version (not /v4/version) for Lavalink client compatibility.">
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/version"
+```
+  </ApiSection>
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="Example Response (Plain Text)">
+```text
+3.1.1
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
+## NodeLink Specific
+
+<ApiCard name="LoadLyrics" method="GET" url="/v4/loadlyrics" description="Loads synchronized or plain text lyrics for a track from various sources.">
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/v4/loadlyrics?encodedTrack=QAAAjQIAJVJpY2sgQXN0bGV5..." \
+     -H "Authorization: yourPassword"
+```
+  </ApiSection>
+  <ApiSection title="Query Parameters">
+    <ApiSchema name="encodedTrack" type="string" required description="Base64 encoded track string" />
+    <ApiSchema name="lang" type="string" description="Language code for lyrics (e.g., 'en', 'es', 'pt')" />
+  </ApiSection>
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="Synced Lyrics">
+```json
+{
+  "loadType": "lyrics",
+  "data": {
+    "synced": true,
+    "lang": "en",
+    "lines": [
+      {
+        "text": "♪ We're no strangers to love ♪",
+        "time": 18640,
+        "duration": 3240
+      },
+      {
+        "text": "♪ You know the rules and so do I ♪",
+        "time": 22640,
+        "duration": 4320
+      }
+    ]
+  }
+}
+```
+      </Accordion>
+      <Accordion title="Plain Text Lyrics (Genius)">
+```json
+{
+  "loadType": "lyrics",
+  "data": {
+    "synced": false,
+    "lang": "en",
+    "source": "genius",
+    "lines": [
+      {
+        "text": "We're no strangers to love",
+        "time": null,
+        "duration": null
+      },
+      {
+        "text": "You know the rules and so do I",
+        "time": null,
+        "duration": null
+      },
+      {
+        "text": "A full commitment's what I'm thinking of",
+        "time": null,
+        "duration": null
+      }
+    ]
+  }
+}
+```
+      </Accordion>
+      <Accordion title="No Lyrics Found">
+```json
+{
+  "loadType": "empty",
+  "data": {}
+}
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="LoadChapters" method="GET" url="/v4/loadchapters" description="Loads chapter markers for YouTube videos that have them.">
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/v4/loadchapters?encodedTrack=QAAAjQIAJVJpY2sgQXN0bGV5..." \
+     -H "Authorization: yourPassword"
+```
+  </ApiSection>
+  <ApiSection title="Query Parameters">
+    <ApiSchema name="encodedTrack" type="string" required description="Base64 encoded track string (YouTube only)" />
+  </ApiSection>
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="With Chapters">
+```json
+[
+  {
+    "title": "Introduction",
+    "start": 0,
+    "end": 30000
+  },
+  {
+    "title": "Main Content",
+    "start": 30000,
+    "end": 120000
+  }
+]
+```
+      </Accordion>
+      <Accordion title="No Chapters">
+```json
+[]
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="TrackStream" method="GET" url="/v4/trackstream" description="Directly streams the track audio (if enabled).">
+  <ApiSection title="Query Parameters">
+    <ApiSchema name="encodedTrack" type="string" required description="The base64 encoded track." />
+    <ApiSchema name="itag" type="number" description="Target specific YouTube itag." />
+  </ApiSection>
+  <ApiSection title="Example Request">
+
+```bash
+curl -X GET "http://your-server.com/v4/trackstream?encodedTrack=YOUR_ENCODED_TRACK&itag=251" \
+          -H "Authorization: yourPassword"
+```
+  </ApiSection>
+</ApiCard>
+
+## Route Planner
+
+<ApiCard name="GetStatus" method="GET" url="/v4/routeplanner/status" description="Returns the current status of the route planner.">
+  <ApiSection title="Example Request">
+
+```bash
+curl -X GET "http://your-server.com/v4/routeplanner/status" \
+          -H "Authorization: yourPassword"
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="FreeAddress" method="POST" url="/v4/routeplanner/free/address" description="Unmarks a failed address.">
+  <ApiSection title="Body">
+    <ApiSchema name="address" type="string" required description="The IP address to free." />
+  </ApiSection>
+  <ApiSection title="Example Request">
+
+```bash
+curl -X POST "http://your-server.com/v4/routeplanner/free/address" \
+          -H "Authorization: yourPassword" \
+          -H "Content-Type: application/json" \
+          -d '{"address": "192.168.1.1"}'
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="FreeAll" method="POST" url="/v4/routeplanner/free/all" description="Unmarks all failed addresses.">
+  <ApiSection title="Example Request">
+```bash
+curl -X POST "http://your-server.com/v4/routeplanner/free/all" \
+          -H "Authorization: yourPassword"
+```
+  </ApiSection>
+</ApiCard>
+
+
+## Audio Filters
+
+NodeLink supports a variety of audio filters that can be applied in real-time to modify playback. Filters are applied through the `filters` object in the Update Player request.
+
+### How to Apply Filters
+
+Send filters in the Update Player request:
+
+```bash
+curl -X PATCH "http://your-server.com/v4/sessions/{sessionId}/players/{guildId}" \
+     -H "Authorization: yourPassword" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "filters": {
+         "equalizer": [
+           {"band": 0, "gain": 0.2}
+         ],
+         "echo": {
+           "delay": 500,
+           "feedback": 0.3,
+           "mix": 0.5
+         }
+       }
+     }'
+```
+
+You can combine multiple filters simultaneously. NodeLink processes them efficiently in the audio pipeline.
+
+### Standard Filters
+
+<ApiCard name="Equalizer" method="FILTER" url="equalizer" description="15-band equalizer for precise frequency control">
+  <ApiSection title="Parameters">
+    <ApiSchema name="band" type="number" description="Band index from 0 to 14" />
+    <ApiSchema name="gain" type="number" description="Gain multiplier from -0.25 to 1.0 (0 = no change, -0.25 = muted, 1.0 = doubled)" />
+  </ApiSection>
+  
+  <ApiSection title="Frequency Bands">
+
+| Band | Frequency | Description |
+|------|-----------|-------------|
+| 0 | 25 Hz | Sub-bass |
+| 1 | 40 Hz | Bass |
+| 2 | 63 Hz | Bass |
+| 3 | 100 Hz | Bass |
+| 4 | 160 Hz | Low-mid |
+| 5 | 250 Hz | Low-mid |
+| 6 | 400 Hz | Mid |
+| 7 | 630 Hz | Mid |
+| 8 | 1 kHz | Mid |
+| 9 | 1.6 kHz | Upper-mid |
+| 10 | 2.5 kHz | Upper-mid |
+| 11 | 4 kHz | Presence |
+| 12 | 6.3 kHz | Presence |
+| 13 | 10 kHz | Brilliance |
+| 14 | 16 kHz | Air |
+
+  </ApiSection>
+  
+  <ApiSection title="Example Usage">
+```json
+{
+  "filters": {
+    "equalizer": [
+      {"band": 0, "gain": 0.2},
+      {"band": 1, "gain": 0.15},
+      {"band": 2, "gain": 0.1}
+    ]
+  }
+}
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Karaoke" method="FILTER" url="karaoke" description="Reduces vocals by eliminating frequencies in a specific band">
+  <ApiSection title="Parameters">
+    <ApiSchema name="level" type="number" description="Effect intensity from 0.0 to 1.0" />
+    <ApiSchema name="monoLevel" type="number" description="Mono channel intensity from 0.0 to 1.0" />
+    <ApiSchema name="filterBand" type="number" description="Target frequency band in Hz" />
+    <ApiSchema name="filterWidth" type="number" description="Width of the frequency filter" />
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Timescale" method="FILTER" url="timescale" description="Changes playback speed, pitch, and rate independently">
+  <ApiSection title="Parameters">
+    <ApiSchema name="speed" type="number" description="Playback speed multiplier (1.0 = normal, must be > 0)" />
+    <ApiSchema name="pitch" type="number" description="Pitch shift multiplier (1.0 = normal, must be > 0)" />
+    <ApiSchema name="rate" type="number" description="Rate change multiplier (1.0 = normal, must be > 0)" />
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Tremolo" method="FILTER" url="tremolo" description="Creates volume oscillation effect">
+  <ApiSection title="Parameters">
+    <ApiSchema name="frequency" type="number" description="Oscillation frequency in Hz (must be > 0)" />
+    <ApiSchema name="depth" type="number" description="Effect depth from 0.0 to 1.0" />
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Vibrato" method="FILTER" url="vibrato" description="Creates pitch oscillation effect">
+  <ApiSection title="Parameters">
+    <ApiSchema name="frequency" type="number" description="Oscillation frequency from 0.0 to 14.0 Hz" />
+    <ApiSchema name="depth" type="number" description="Effect depth from 0.0 to 1.0" />
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Rotation" method="FILTER" url="rotation" description="Rotates audio around the stereo field (8D audio effect)">
+  <ApiSection title="Parameters">
+    <ApiSchema name="rotationHz" type="number" description="Rotation speed in Hz (0.2 is recommended for smooth rotation)" />
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Distortion" method="FILTER" url="distortion" description="Applies distortion using sine, cosine, and tangent waves">
+  <ApiSection title="Parameters">
+    <ApiSchema name="sinOffset" type="number" description="Sine wave offset" />
+    <ApiSchema name="sinScale" type="number" description="Sine wave scale multiplier" />
+    <ApiSchema name="cosOffset" type="number" description="Cosine wave offset" />
+    <ApiSchema name="cosScale" type="number" description="Cosine wave scale multiplier" />
+    <ApiSchema name="tanOffset" type="number" description="Tangent wave offset" />
+    <ApiSchema name="tanScale" type="number" description="Tangent wave scale multiplier" />
+    <ApiSchema name="offset" type="number" description="General offset" />
+    <ApiSchema name="scale" type="number" description="General scale multiplier" />
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Channel Mix" method="FILTER" url="channelMix" description="Mixes left and right audio channels with custom ratios">
+  <ApiSection title="Parameters">
+    <ApiSchema name="leftToLeft" type="number" description="Left to left channel factor (0.0 to 1.0, default: 1.0)" />
+    <ApiSchema name="leftToRight" type="number" description="Left to right channel factor (0.0 to 1.0, default: 0.0)" />
+    <ApiSchema name="rightToLeft" type="number" description="Right to left channel factor (0.0 to 1.0, default: 0.0)" />
+    <ApiSchema name="rightToRight" type="number" description="Right to right channel factor (0.0 to 1.0, default: 1.0)" />
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Low Pass" method="FILTER" url="lowPass" description="Filters out high frequencies, letting low frequencies pass through">
+  <ApiSection title="Parameters">
+    <ApiSchema name="smoothing" type="number" description="Smoothing factor (must be > 1.0 to enable, higher values = more aggressive filtering)" />
+  </ApiSection>
+</ApiCard>
+
+### NodeLink Exclusive Filters
+
+These filters are unique to NodeLink, built from scratch with custom DSP implementations.
+
+<ApiCard name="Echo" method="FILTER" url="echo" description="Creates delay-based echo with feedback control">
+  <ApiSection title="Parameters">
+    <ApiSchema name="delay" type="number" description="Delay time in milliseconds (0 to 5000ms)" />
+    <ApiSchema name="feedback" type="number" description="Amount of signal fed back into the delay (0.0 to 1.0)" />
+    <ApiSchema name="mix" type="number" description="Dry/wet mix ratio (0.0 = dry only, 1.0 = wet only)" />
+  </ApiSection>
+  
+  <ApiSection title="Example Usage">
+```json
+{
+  "filters": {
+    "echo": {
+      "delay": 500,
+      "feedback": 0.3,
+      "mix": 0.5
+    }
+  }
+}
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Chorus" method="FILTER" url="chorus" description="Simulates multiple voices playing together with modulated delays">
+  <ApiSection title="Parameters">
+    <ApiSchema name="rate" type="number" description="LFO modulation rate in Hz" />
+    <ApiSchema name="depth" type="number" description="Modulation depth (0.0 to 1.0)" />
+    <ApiSchema name="delay" type="number" description="Base delay time in milliseconds (1 to 45ms)" />
+    <ApiSchema name="mix" type="number" description="Dry/wet mix ratio (0.0 to 1.0)" />
+    <ApiSchema name="feedback" type="number" description="Feedback amount (0.0 to 0.95)" />
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Compressor" method="FILTER" url="compressor" description="Dynamic range compression for balanced audio levels">
+  <ApiSection title="Parameters">
+    <ApiSchema name="threshold" type="number" description="Threshold level in dB (when compression starts)" />
+    <ApiSchema name="ratio" type="number" description="Compression ratio (1.0 = no compression, higher = more compression)" />
+    <ApiSchema name="attack" type="number" description="Attack time in milliseconds (how fast compression engages)" />
+    <ApiSchema name="release" type="number" description="Release time in milliseconds (how fast compression disengages)" />
+    <ApiSchema name="gain" type="number" description="Makeup gain in dB (compensates for volume reduction)" />
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="High Pass" method="FILTER" url="highpass" description="Filters out low frequencies, letting high frequencies pass through">
+  <ApiSection title="Parameters">
+    <ApiSchema name="smoothing" type="number" description="Smoothing factor (must be > 1.0 to enable)" />
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Phaser" method="FILTER" url="phaser" description="Sweeps all-pass filters across the frequency spectrum for a swooshing effect">
+  <ApiSection title="Parameters">
+    <ApiSchema name="stages" type="number" description="Number of filter stages (2 to 12, more = stronger effect)" />
+    <ApiSchema name="rate" type="number" description="LFO sweep rate in Hz" />
+    <ApiSchema name="depth" type="number" description="Modulation depth (0.0 to 1.0)" />
+    <ApiSchema name="feedback" type="number" description="Feedback amount (0.0 to 0.9)" />
+    <ApiSchema name="mix" type="number" description="Dry/wet mix ratio (0.0 to 1.0)" />
+    <ApiSchema name="minFrequency" type="number" description="Minimum sweep frequency in Hz" />
+    <ApiSchema name="maxFrequency" type="number" description="Maximum sweep frequency in Hz" />
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Spatial" method="FILTER" url="spatial" description="Creates spatial audio using cross-channel delays and modulation">
+  <ApiSection title="Parameters">
+    <ApiSchema name="depth" type="number" description="Effect depth (0.0 to 1.0)" />
+    <ApiSchema name="rate" type="number" description="Modulation rate in Hz" />
+  </ApiSection>
+</ApiCard>
+

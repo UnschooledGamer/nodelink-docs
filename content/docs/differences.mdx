@@ -1,0 +1,803 @@
+---
+title: NodeLink vs Lavalink
+description: Two paths, same destination. Which one speaks to you? 🎭
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+
+# NodeLink vs Lavalink
+
+You've probably heard of **Lavalink**. It's the legend. The OG. The one that started it all.
+
+And you're probably wondering: *"Why NodeLink? What's different?"*
+
+Fair question. Let's talk about it.
+
+<Callout type="info" title="Compatibility First">
+  NodeLink maintains **full compatibility** with Lavalink v4 API. Your existing clients work out of the box. We just... added a bit more flavor to the mix.
+</Callout>
+
+---
+
+## The Extra Spice 🌶️
+
+NodeLink isn't just a clone. We took what worked and added features that made sense to us.
+
+<Cards>
+  <Card title="🎤 Lyrics Support" href="#lyrics-support">
+    Synced lyrics from YouTube captions. Plain text from Genius, Musixmatch, and LRCLib.
+  </Card>
+  <Card title="📚 Chapter Markers" href="#chapter-markers">
+    Load video chapters automatically. Perfect for podcasts and long-form content.
+  </Card>
+  <Card title="📡 Connection Metrics" href="#connection-metrics">
+    Real-time network speed tracking. Know exactly how fast your audio is flowing.
+  </Card>
+  <Card title="🎵 Direct Streaming" href="#direct-streaming">
+    Stream audio directly without going through Discord. For when you need that flexibility.
+  </Card>
+  <Card title="🔊 Text-to-Speech" href="#tts">
+    Google TTS built-in. No plugins needed.
+  </Card>
+</Cards>
+
+---
+
+## What's Actually Different?
+
+Let's break it down. No fluff. Just facts.
+
+### Lyrics Support
+
+<Callout type="info" title="Both Support Lyrics">
+  **Lavalink** has community plugins for lyrics (like LavaLyrics, Lyrics.kt).  
+  **NodeLink** has it built-in with multiple sources.
+</Callout>
+
+```bash
+# Get lyrics with automatic source detection
+curl "http://your-server.com/v4/loadlyrics?encodedTrack=QAAAjQI..." \
+     -H "Authorization: yourPassword"
+
+# Prefer specific language
+curl "http://your-server.com/v4/loadlyrics?encodedTrack=QAAAjQI...&lang=pt" \
+     -H "Authorization: yourPassword"
+```
+
+**Supported sources:**
+- **YouTube Captions**: Synced, timestamped lyrics (when available)
+- **Genius**: Plain text lyrics, community-sourced
+- **Musixmatch**: Synced lyrics database (auto-obtains signature)
+- **LRCLib**: Open-source synced lyrics repository
+
+<Accordions>
+  <Accordion title="Synced Lyrics Example (YouTube Captions)">
+```json
+{
+  "loadType": "lyrics",
+  "data": {
+    "synced": true,
+    "lang": "en",
+    "source": "youtube",
+    "lines": [
+      {
+        "text": "♪ We're no strangers to love ♪",
+        "time": 18640,
+        "duration": 3240
+      },
+      {
+        "text": "♪ You know the rules and so do I ♪",
+        "time": 22640,
+        "duration": 4320
+      }
+    ]
+  }
+}
+```
+  </Accordion>
+  <Accordion title="Plain Text Lyrics Example (Genius)">
+```json
+{
+  "loadType": "lyrics",
+  "data": {
+    "synced": false,
+    "lang": "en",
+    "source": "genius",
+    "lines": [
+      {
+        "text": "We're no strangers to love",
+        "time": null,
+        "duration": null
+      },
+      {
+        "text": "You know the rules and so do I",
+        "time": null,
+        "duration": null
+      }
+    ]
+  }
+}
+```
+  </Accordion>
+</Accordions>
+
+---
+
+### Chapter Markers
+
+<Callout type="info" title="Both Support Chapters">
+  **Lavalink** has the SponsorBlock plugin for chapters.  
+  **NodeLink** has automatic chapter extraction built-in.
+</Callout>
+
+Perfect for podcasts, tutorials, and music albums with multiple parts.
+
+```bash
+curl "http://your-server.com/v4/loadchapters?encodedTrack=QAAAjQI..." \
+     -H "Authorization: yourPassword"
+```
+
+**Returns:**
+```json
+[
+  {
+    "title": "Introduction",
+    "start": 0,
+    "end": 30000
+  },
+  {
+    "title": "Main Content",
+    "start": 30000,
+    "end": 120000
+  }
+]
+```
+
+---
+
+### Connection Metrics
+
+<Callout type="success" title="NodeLink Exclusive">
+  Real-time connection health and speed tracking. `/v4/connection`
+</Callout>
+
+Know exactly how your connection is performing. Useful for debugging slow audio or buffering issues.
+
+```bash
+curl "http://your-server.com/v4/connection" \
+     -H "Authorization: yourPassword"
+```
+
+**Response:**
+```json
+{
+  "status": "good",
+  "metrics": {
+    "speed": {
+      "bps": 22550021.50,
+      "kbps": 176172.04,
+      "mbps": 172.04
+    },
+    "downloadedBytes": 10485760,
+    "durationSeconds": 0.47,
+    "timestamp": 1764787354485
+  }
+}
+```
+
+---
+
+### Direct Streaming
+
+<Callout type="info" title="Both Support Direct Streaming">
+  **Lavalink** has `/youtube/stream/{videoId}` via YouTube plugin.  
+  **NodeLink** has `/v4/trackstream` for all sources.
+</Callout>
+
+Stream audio directly as binary data or get a redirect to the source URL. Enable in config with `enableTrackStreamEndpoint: true`.
+
+<Tabs items={['NodeLink', 'Lavalink']}>
+  <Tab value="NodeLink">
+```bash
+# Works with ANY source (YouTube, Spotify, Deezer, etc.)
+curl "http://your-server.com/v4/trackstream?encodedTrack=QAAAjQI..." \
+     -H "Authorization: yourPassword" \
+     --output audio.mp3
+```
+  </Tab>
+  <Tab value="Lavalink">
+```bash
+# Only works with YouTube
+curl "http://your-server.com/youtube/stream/{videoId}" \
+     -H "Authorization: yourPassword" \
+     --output audio.mp3
+```
+  </Tab>
+</Tabs>
+
+**Use cases:**
+- Downloading audio for offline playback
+- Custom audio processing pipelines
+- Building audio preview features
+
+---
+
+### Text-to-Speech
+
+<Callout type="info" title="Both Support TTS">
+  **Lavalink** has Google Cloud TTS plugin (requires API keys).  
+  **NodeLink** has Google TTS built-in (no keys needed).
+</Callout>
+
+<Tabs items={['NodeLink', 'Lavalink']}>
+  <Tab value="NodeLink">
+```bash
+# Free, no API keys required
+curl "http://your-server.com/v4/loadtracks?identifier=gtts:Hello World" \
+     -H "Authorization: yourPassword"
+```
+  </Tab>
+  <Tab value="Lavalink">
+Requires [Google Cloud TTS Plugin](https://github.com/DuncteBot/tts-plugin) with Google Cloud API keys and billing enabled.
+  </Tab>
+</Tabs>
+
+---
+
+## Enhanced Monitoring
+
+### Server Info
+
+Both provide `/v4/info`, but NodeLink adds the `isNodelink` field for identification:
+
+<Tabs items={['NodeLink', 'Lavalink']}>
+  <Tab value="NodeLink">
+```json
+{
+  "version": {
+    "semver": "3.1.1",
+    "major": 3,
+    "minor": 1,
+    "patch": 1
+  },
+  "node": "v25.2.1",
+  "isNodelink": true,
+  "sourceManagers": [
+    "deezer",
+    "bandcamp",
+    "soundcloud",
+    "local",
+    "http",
+    "applemusic",
+    "youtube",
+    "instagram",
+    "kwai",
+    "twitch",
+    "spotify",
+    "tidal",
+    "nicovideo",
+    "reddit",
+    "lastfm"
+  ],
+  "filters": [
+    "tremolo",
+    "vibrato",
+    "lowpass",
+    "highpass",
+    "rotation",
+    "karaoke",
+    "distortion",
+    "channelMix",
+    "equalizer",
+    "chorus",
+    "compressor",
+    "echo",
+    "phaser",
+    "timescale"
+  ]
+}
+```
+  </Tab>
+  <Tab value="Lavalink">
+```json
+{
+  "version": {
+    "semver": "4.0.0",
+    "major": 4,
+    "minor": 0,
+    "patch": 0
+  },
+  "jvm": "18.0.2.1",
+  "lavaplayer": "1.3.98.4",
+  "sourceManagers": [
+    "youtube",
+    "soundcloud"
+  ],
+  "filters": [
+    "equalizer",
+    "karaoke",
+    "timescale",
+    "channelMix"
+  ]
+}
+```
+  </Tab>
+</Tabs>
+
+### Detailed Statistics
+
+NodeLink's `/v4/stats` includes **detailedStats** with granular tracking:
+
+```json
+{
+  "players": 5,
+  "playingPlayers": 3,
+  "uptime": 17930,
+  "detailedStats": {
+    "api": {
+      "requests": {
+        "/v4/loadtracks": 150,
+        "/v4/info": 5,
+        "/v4/loadlyrics": 42
+      },
+      "errors": {}
+    },
+    "sources": {
+      "youtube": 120,
+      "spotify": 30
+    },
+    "playback": {
+      "events": {
+        "TrackStartEvent": 100,
+        "TrackEndEvent": 95
+      }
+    }
+  }
+}
+```
+
+---
+
+## Audio Sources Comparison
+
+Here's where things get interesting. Let's see what's **built-in** vs what needs **plugins**.
+
+<Tabs items={['Direct Playback', 'Mirror Sources', 'Search Prefixes']}>
+  <Tab value="Direct Playback">
+    These sources stream audio **directly** without needing to search elsewhere:
+
+    | Source | Lavalink | NodeLink |
+    |--------|----------|----------|
+    | YouTube | ✅ Plugin* | ✅ Built-in |
+    | SoundCloud | ✅ Built-in | ✅ Built-in |
+    | Deezer | 🔌 Plugin** | ✅ Built-in*** |
+    | Bandcamp | 🔌 Plugin | ✅ Built-in |
+    | Twitch | ✅ Built-in | ✅ Built-in |
+    | Instagram | ❌ Not available | ✅ Built-in |
+    | Reddit | ❌ Not available | ✅ Built-in |
+    | Kwai | ❌ Not available | ✅ Built-in |
+    | NicoVideo | ❌ Not available | ✅ Built-in |
+    | Pandora | ❌ Not available | ✅ Built-in |
+    | JioSaavn | ❌ Not available | ✅ Built-in |
+    | Local Files | ✅ Built-in | ✅ Built-in |
+    | HTTP URLs | ✅ Built-in | ✅ Built-in |
+
+    *Requires [YouTube Plugin](https://github.com/lavalink-devs/youtube-source) (community-maintained)  
+    **Requires [LavaSrc Plugin](https://github.com/topi314/LavaSrc) (community-maintained)  
+    ***Requires Deezer ARL token (free to obtain)
+  </Tab>
+  <Tab value="Mirror Sources">
+    These sources fetch metadata then **search YouTube** for actual audio:
+
+    | Source | Lavalink | NodeLink | Notes |
+    |--------|----------|----------|-------|
+    | Spotify | 🔌 Plugin | ✅ Built-in | Requires Client ID/Secret (free) |
+    | Apple Music | 🔌 Plugin | ✅ Built-in | **Auto-generates token** (no $99/year needed!) |
+    | Tidal | ❌ Not available | ✅ Built-in | Requires web token (free) |
+    | Last.fm | ❌ Not available | ✅ Built-in | Track discovery, mirrors to YouTube |
+
+    <Callout type="success" title="Apple Music Token Magic">
+      **NodeLink automatically generates Apple Music tokens** without requiring the $99/year Apple Developer Program membership. Just set `mediaApiToken: "token_here"` in config and NodeLink handles the rest.
+      
+      Lavalink's LavaSrc plugin requires you to pay Apple and manually obtain tokens.
+    </Callout>
+
+    **How mirroring works:**
+    1. Fetch track metadata from Spotify/Apple Music/Tidal
+    2. Search YouTube with: `"song title" "artist name"`
+    3. Find best match based on duration and metadata
+    4. Stream from YouTube
+
+    **Why mirror?**
+    - These platforms don't provide direct streaming APIs
+    - Mirroring is the only way without paying for premium accounts
+    - YouTube has almost everything
+  </Tab>
+  <Tab value="Search Prefixes">
+    **Standard (both support):**
+    - `ytsearch:` - YouTube search
+    - `ytmsearch:` - YouTube Music search
+    - `scsearch:` - SoundCloud search
+
+    **NodeLink extras:**
+    - `spsearch:` - Spotify search (then mirrors to YouTube)
+    - `amsearch:` - Apple Music search (then mirrors to YouTube)
+    - `dzsearch:` - Deezer direct search
+    - `tdsearch:` - Tidal search (then mirrors to YouTube)
+    - `bcsearch:` - Bandcamp search
+    - `jssearch:` - JioSaavn search
+    - `ncsearch:` / `nicovideo:` - NicoVideo search
+    - `pdsearch:` - Pandora search
+    - `gtts:` - Google Text-to-Speech
+    - `local:` / `file:` - Local file path
+    - `http:` - Direct HTTP URL
+
+    **Try it:**
+    ```bash
+    # Search Spotify then play via YouTube
+    curl "http://your-server.com/v4/loadtracks?identifier=spsearch:never gonna give you up" \
+         -H "Authorization: yourPassword"
+
+    # Search Deezer directly
+    curl "http://your-server.com/v4/loadtracks?identifier=dzsearch:daft punk" \
+         -H "Authorization: yourPassword"
+
+    # Text-to-speech
+    curl "http://your-server.com/v4/loadtracks?identifier=gtts:Hello World" \
+         -H "Authorization: yourPassword"
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## The Plugin Situation
+
+Let's address the elephant in the room: **Lavalink has plugins. NodeLink doesn't.**
+
+But here's the thing...
+
+<Callout type="info" title="Different Philosophies">
+  **Lavalink**: Modular ecosystem. Want a feature? Install a plugin.  
+  **NodeLink**: Batteries included. Want a feature? It's probably already there.
+  
+  Neither is objectively better. It depends on what **you** need.
+</Callout>
+
+### Lavalink's Approach
+
+Lavalink has a **thriving plugin ecosystem** built by the community:
+
+- **[LavaSrc](https://github.com/topi314/LavaSrc)**: Spotify, Apple Music, Deezer, Yandex Music support
+- **[LavaLyrics](https://github.com/topi314/LavaLyrics)**: Lyrics API for other plugins to consume
+- **[SponsorBlock](https://github.com/topi314/SponsorBlock-Plugin)**: YouTube chapters and sponsor segment skipping
+- **[YouTube Plugin](https://github.com/lavalink-devs/youtube-source)**: Enhanced YouTube with OAuth, age-restriction bypass
+- **[Google TTS Plugin](https://github.com/DuncteBot/tts-plugin)**: Text-to-speech via Google Cloud API
+- **[LavaSearch](https://github.com/topi314/LavaSearch)**: Advanced search across platforms
+- **[LavaDSPX](https://github.com/Devoxin/LavaDSPX-Plugin)**: Additional audio filters (echo, compressor, phaser)
+- **And many more...**
+
+**How plugin installation works:**
+
+Lavalink can **auto-download plugins** from Maven repositories. You declare them in `application.yml` with their dependency coordinates, and Lavalink downloads the `.jar` files on startup.
+
+**Advantages:**
+- **Flexibility**: Install only what you need
+- **Community-driven**: Third-party developers can extend functionality
+- **Modularity**: Each plugin is independent
+- **Auto-download**: No manual `.jar` management needed
+- **Extensibility**: You can create custom plugins in Java/Kotlin
+
+**Trade-offs:**
+- **Version compatibility**: Plugins must match your Lavalink version (v3 vs v4)
+- **Configuration complexity**: Each plugin has its own config section
+- **Dependency management**: Need to track plugin versions and updates
+- **Restart required**: Adding/updating plugins requires restarting Lavalink
+
+### NodeLink's Approach
+
+NodeLink has **most common features built-in**:
+
+- **15+ sources** out of the box
+- **Lyrics** from 4 providers
+- **Chapters** extraction
+- **TTS** without API keys
+- **Connection metrics**
+- **Direct streaming**
+
+**Advantages:**
+- Simplicity: One package, everything works
+- No version conflicts: Everything is tested together
+- Unified config: One config file for all features
+
+**Trade-offs:**
+- Less flexibility: Can't add custom plugins
+- Larger base package: Includes features you might not use
+- Fixed feature set: Dependent on core team for new features
+
+<Callout type="success" title="The Reality">
+  Most bots use: YouTube, Spotify, SoundCloud, lyrics, and basic playback. NodeLink covers this **without any plugins**.
+  
+  If you need highly specialized features (custom audio sources, unique filters), Lavalink's plugin ecosystem might serve you better.
+</Callout>
+
+---
+
+## Configuration Tokens
+
+Some sources need tokens. Here's the reality:
+
+<Tabs items={['Free Tokens', 'Auto-Generated', 'No Token Needed']}>
+  <Tab value="Free Tokens">
+    **These require free tokens (no payment):**
+
+    **Spotify** (`clientId` + `clientSecret`):
+    - Visit [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+    - Create an app (free)
+    - Copy Client ID and Secret
+    - Add to config
+
+    **Deezer** (`arl`):
+    - Login to Deezer in browser
+    - Open DevTools → Application → Cookies
+    - Copy `arl` cookie value
+    - Add to config
+
+    **Tidal** (`token`):
+    - Login to Tidal web player
+    - Open DevTools → Network tab
+    - Look for API requests with Authorization header
+    - Copy token value
+    - Add to config
+
+    <Callout type="info">
+      All these services have **free tiers**. You don't need premium accounts.
+    </Callout>
+  </Tab>
+  <Tab value="Auto-Generated">
+    **Apple Music** - The magic one:
+
+    ```js
+    applemusic: {
+      enabled: true,
+      mediaApiToken: "token_here" // NodeLink generates it automatically!
+    }
+    ```
+
+    That's it. NodeLink handles Apple Music authentication **without** requiring:
+    - $99/year Apple Developer membership
+    - Manual token extraction
+    - Token refresh management
+
+    **How?** NodeLink reverse-engineered Apple's web player authentication and can generate valid tokens on-demand.
+
+    <Callout type="success" title="This is why NodeLink exists">
+      We looked at requiring a $99/year membership and said "nope, there's a better way."
+    </Callout>
+  </Tab>
+  <Tab value="No Token Needed">
+    **These work without ANY tokens:**
+
+    - YouTube
+    - SoundCloud  
+    - Bandcamp
+    - Instagram
+    - Reddit
+    - Kwai
+    - NicoVideo
+    - Pandora (auto-fetches csrf token)
+    - Twitch
+    - Last.fm
+    - Local files
+    - HTTP URLs
+    - Google TTS
+
+    Just enable them in config and they work immediately.
+  </Tab>
+</Tabs>
+
+---
+
+## WebSocket Events
+
+NodeLink emits **additional events** for fine-grained control:
+
+<Accordions>
+  <Accordion title="Standard Events (Both)">
+    - **TrackStartEvent**: Track started playing
+    - **TrackEndEvent**: Track finished/stopped
+    - **TrackExceptionEvent**: Track threw an error
+    - **TrackStuckEvent**: Track got stuck
+    - **WebSocketClosedEvent**: Voice connection closed
+  </Accordion>
+  <Accordion title="NodeLink Extras">
+    - **PlayerCreatedEvent**: Player initialized
+    - **PlayerDestroyedEvent**: Player cleaned up
+    - **PlayerConnectedEvent**: Connected to voice
+    - **PlayerReconnectingEvent**: Attempting reconnection
+    - **VolumeChangedEvent**: Volume adjusted
+    - **FiltersChangedEvent**: Filters modified
+    - **SeekEvent**: Track position changed
+    - **PauseEvent**: Playback paused/resumed
+    - **ConnectionStatusEvent**: Voice connection status update
+
+    These give you **real-time visibility** into everything happening with the player.
+  </Accordion>
+</Accordions>
+
+---
+
+## So... Which One?
+
+Still unsure? Let's make it personal.
+
+<Accordions>
+  <Accordion title="I want everything to just work 🎯">
+    **→ NodeLink**
+    
+    You don't want to manage plugins. You don't want to hunt down .jar files or deal with version conflicts. You just want Spotify, lyrics, and chapters to work out of the box.
+    
+    NodeLink gives you everything in one package. Install once, enable sources in config, done.
+  </Accordion>
+  
+  <Accordion title="I need custom plugins and flexibility 🔧">
+    **→ Lavalink**
+    
+    You have specific needs. Maybe you need a custom audio filter that doesn't exist yet. Maybe you're building something that requires a unique plugin architecture.
+    
+    Lavalink's plugin ecosystem is mature with community-built solutions for edge cases.
+  </Accordion>
+  
+  <Accordion title="I'm building a music bot quickly 🚀">
+    **→ NodeLink**
+    
+    Time is money. You need a proof of concept by Friday. You want Spotify, YouTube, lyrics, and chapters without spending hours configuring plugins and reading documentation.
+    
+    Install NodeLink. Add tokens to config. Write your bot logic. Ship it. Done.
+  </Accordion>
+  
+  <Accordion title="I want modern architecture and scalability 💪">
+    **→ NodeLink**
+    
+    NodeLink uses a **multi-worker cluster architecture**. Each player session can run in its own dedicated process, not just the voice connection, but the entire player logic.
+    
+    This means:
+    - Better resource utilization on multi-core systems
+    - Isolation between players (one crash doesn't affect others)
+    - Automatic scaling based on load
+    - Hot-reload workers without downtime
+    
+    It's built for modern infrastructure from day one.
+  </Accordion>
+  
+  <Accordion title="I want to learn and tinker 💡">
+    **→ NodeLink**
+    
+    You're a JavaScript/TypeScript developer. You want to read the code, understand the internals, maybe even contribute features.
+    
+    NodeLink is 100% JavaScript. The codebase is approachable. No JVM bytecode, no compiled .class files. Just readable JS you can debug with Chrome DevTools.
+  </Accordion>
+  
+  <Accordion title="I need Java ecosystem integration ☕">
+    **→ Lavalink**
+    
+    Your entire infrastructure is Java. You have JVM monitoring tools, deployment pipelines optimized for .jar files, and a team with Java expertise.
+    
+    Lavalink fits naturally into JVM-based infrastructure.
+  </Accordion>
+
+  <Accordion title="I don't want to pay $99/year for Apple Music 💰">
+    **→ NodeLink**
+
+    You want Apple Music support but don't want to pay $99/year for Apple Developer Program membership just to get API tokens.
+
+    NodeLink auto-generates Apple Music tokens. LavaSrc plugin for Lavalink requires the paid membership.
+  </Accordion>
+
+  <Accordion title="I want to be part of building something 🌱">
+    **→ NodeLink**
+
+    NodeLink is community-driven. Yes, there might be bugs. Yes, some features are still being refined. But that's the beauty of it.
+    
+    **You can help shape it.** Report bugs, suggest features, contribute code. The community is actively building the best experience possible for everyone.
+    
+    It's not about being "more stable" or "less stable" — it's about being **actively developed** with a community that cares.
+  </Accordion>
+</Accordions>
+
+### The Real Answer
+
+**NodeLink is API-compatible with Lavalink v4.** Your client works with both seamlessly.
+
+Want to try NodeLink? Install it. Test your use case. If you love it, stick with it. If you need something Lavalink-specific, you can switch — **your client code doesn't change**.
+
+The beauty is that **you're not locked in**. These are tools, not commitments.
+
+<Callout type="success" title="Why NodeLink Matters">
+  NodeLink represents a **modern approach** to audio streaming:
+  
+  - **Worker-based architecture**: Each player can run in its own process
+  - **Built-in features**: No plugin hunting or version conflicts
+  - **Open development**: Community-driven improvements
+  - **JavaScript ecosystem**: Native integration with Node.js projects
+  - **Cost-effective**: Free features that cost money elsewhere (Apple Music tokens)
+  
+  It's not about replacing Lavalink. It's about offering **a better fit** for certain use cases.
+</Callout>
+
+<Callout type="info" title="We're Here to Help">
+  NodeLink might have rough edges. We own that. But **we're actively improving it every day**.
+  
+  Found a bug? [Report it](https://github.com/PerformanC/NodeLink/issues) and we'll fix it.  
+  Need a feature? Let us know and we'll consider it.  
+  Want to contribute? The codebase is waiting for you.
+  
+  **Together, we make NodeLink better.** 💚
+</Callout>
+
+---
+
+<Callout type="info" title="Migration is Easy">
+  NodeLink is a **drop-in replacement** for Lavalink v4. Change your connection URL, everything works. Then gradually enable NodeLink-specific features (lyrics, chapters, extra sources) when you're ready.
+</Callout>
+
+---
+
+## Detecting NodeLink
+
+Want to detect if you're connected to NodeLink vs Lavalink? Check the `/v4/info` endpoint:
+
+```javascript
+const info = await fetch('http://your-server.com/v4/info', {
+  headers: { 'Authorization': 'yourPassword' }
+}).then(r => r.json());
+
+if (info.isNodelink) {
+  console.log(`🌿 NodeLink v${info.version.semver}`);
+  // Use NodeLink-specific features
+  // - /v4/loadlyrics
+  // - /v4/loadchapters
+  // - /v4/connection
+  // - Extra sources (Instagram, Reddit, etc.)
+} else {
+  console.log(`🎵 Lavalink v${info.version.semver}`);
+  // Standard Lavalink features only
+}
+```
+
+---
+
+## What's Next?
+
+Now that you know the differences, it's time to try it out.
+
+<Steps>
+  <Step>
+    ### Install NodeLink
+    Follow the [Quick Start](/docs) guide to get NodeLink running in 5 minutes.
+  </Step>
+  <Step>
+    ### Configure Sources
+    Add tokens for Spotify, Deezer, Tidal (all free). Apple Music auto-generates.
+  </Step>
+  <Step>
+    ### Try Extra Features
+    Experiment with lyrics, chapters, connection metrics, and TTS.
+  </Step>
+  <Step>
+    ### Build Something Cool
+    Make a bot, share your creation, join the community!
+  </Step>
+</Steps>
+
+---
+
+## Questions?
+
+Found something unclear? Want to suggest a feature? Have a cool use case?
+
+Join our community or [open an issue](https://github.com/PerformanC/NodeLink/issues). We're always listening. 💙

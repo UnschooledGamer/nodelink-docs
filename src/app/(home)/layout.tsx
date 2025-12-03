@@ -21,7 +21,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
               items: [
                 {
                   text: 'API',
-                  url: '/docs/api',
+                  url: '/docs/api/websocket',
                   icon: <Globe />
                 },
                 {
@@ -65,7 +65,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
                       <p className="text-fd-muted-foreground text-sm">Learn to Use Nodelink</p>
                     </NavbarMenuLink>
 
-                    <NavbarMenuLink href="/docs/api" className="lg:col-start-2">
+                    <NavbarMenuLink href="/docs/api/websocket" className="lg:col-start-2">
                         <Globe className="bg-fd-primary text-fd-primary-foreground p-1 mb-2 rounded-md" />
 
                         <p className="font-medium">API</p>

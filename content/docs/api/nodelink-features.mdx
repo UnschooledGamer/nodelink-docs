@@ -1,0 +1,624 @@
+---
+title: NodeLink Features
+description: Exclusive NodeLink features and enhancements.
+---
+
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+import { ApiCard, ApiSection, ApiSchema } from '@/components/api-ui';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# NodeLink Features
+
+Features unique to NodeLink that extend beyond standard Lavalink compatibility.
+
+## Enhanced Track Metadata
+
+<ApiCard name="Holo Tracks" method="CONFIG" url="enableHoloTracks" description="Automatically enriches tracks with comprehensive metadata when they start playing.">
+  <ApiSection title="Overview">
+When enabled in config.js, NodeLink makes an additional API call to YouTube when a track starts, gathering rich metadata that would normally require multiple separate API calls. The enriched data includes channel information (name, subscribers, verified status), track details (views, publish date, keywords), media quality options, external links from the channel (Spotify, Instagram), and multiple thumbnail resolutions. All data is returned in the `pluginInfo` object with `type: "holo"` during the TrackStartEvent.
+  </ApiSection>
+
+  <ApiSection title="Configuration">
+```js
+// config.js
+enableHoloTracks: true
+```
+
+```bash
+# Docker environment variable
+NODELINK_ENABLEHOLOTRACKS=true
+```
+  </ApiSection>
+
+  <ApiSection title="Use Cases & Performance">
+<Callout type="info" title="Use Case">
+Ideal for music bots displaying rich embeds with artist info, applications showing detailed video metadata without extra API calls, and clients wanting comprehensive track information automatically.
+</Callout>
+
+<Callout type="warn" title="Performance Impact">
+Adds one extra YouTube API request per track start (100-300ms latency). Only works for YouTube/YouTube Music sources. Uses ~5-20 KB extra bandwidth per track.
+</Callout>
+  </ApiSection>
+
+  <ApiSection title="Example Response">
+    <Accordions>
+      <Accordion title="Holo Track in TrackStartEvent">
+```json
+{
+  "op": "event",
+  "type": "TrackStartEvent",
+  "guildId": "...",
+  "track": {
+    "encoded": "QAAAjQIAJVJpY2sgQXN0bGV5...",
+    "info": {
+      "identifier": "dQw4w9WgXcQ",
+      "title": "Rick Astley - Never Gonna Give You Up",
+      "author": "Rick Astley",
+      "length": 213000,
+      "uri": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "sourceName": "youtube"
+    },
+    "pluginInfo": {
+      "type": "holo",
+      "accessibility": "Rick Astley - Never Gonna Give You Up by Rick Astley",
+      "description": "The official video for Never Gonna Give You Up...",
+      "keywords": ["rick astley", "never gonna give you up", "80s music"],
+      "externalLinks": [
+        {"platform": "spotify", "url": "https://open.spotify.com/artist/..."},
+        {"platform": "instagram", "url": "https://instagram.com/rickastley"}
+      ],
+      "details": {
+        "isSeekable": true,
+        "isLive": false,
+        "isExplicit": false,
+        "genres": ["pop", "80s"],
+        "publishedAt": "2009-10-25T06:57:33Z"
+      },
+      "links": {
+        "source": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "preview": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        "artist": "https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw"
+      },
+      "media": {
+        "thumbnails": {
+          "default": "https://i.ytimg.com/vi/dQw4w9WgXcQ/default.jpg",
+          "medium": "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg",
+          "high": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+          "standard": "https://i.ytimg.com/vi/dQw4w9WgXcQ/sddefault.jpg",
+          "maxres": "https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+        },
+        "videoQualities": ["1080p", "720p", "480p", "360p"],
+        "audioFormats": ["251 (opus)", "140 (m4a)"]
+      },
+      "channel": {
+        "name": "Rick Astley",
+        "id": "UCuAXFkgsw1L7xaCfnd5JJOw",
+        "url": "https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw",
+        "icon": "https://yt3.ggpht.com/...",
+        "subscribers": 4500000,
+        "verified": true,
+        "description": "Official Rick Astley YouTube Channel...",
+        "videoCount": 156
+      },
+      "metrics": {
+        "views": 1500000000,
+        "likes": 15000000,
+        "badges": ["verified"]
+      }
+    }
+  }
+}
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
+## Lyrics & Chapters
+
+<ApiCard name="LoadLyrics" method="GET" url="/v4/loadlyrics" description="Load synced or unsynced lyrics from multiple sources automatically.">
+  <ApiSection title="Query Parameters">
+    <ApiSchema name="encodedTrack" type="string" required description="Base64 encoded track string" />
+    <ApiSchema name="lang" type="string" description="Language code for lyrics (e.g., 'en', 'es', 'pt', 'ja')" />
+  </ApiSection>
+
+  <ApiSection title="Lyrics Sources">
+<Callout type="info" title="Source Priority">
+NodeLink automatically tries multiple sources in order until lyrics are found:
+
+1. **YouTube Captions** - Synced, timestamped lyrics from captions
+2. **Musixmatch** - Large database of synced lyrics
+3. **LRCLib** - Open-source community synced lyrics
+4. **Genius** - Community-sourced plain text lyrics
+
+The `source` field in the response indicates which provider returned the lyrics.
+</Callout>
+  </ApiSection>
+
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/v4/loadlyrics?encodedTrack=QAAAjQIAJVJpY2sgQXN0bGV5...&lang=en" \
+     -H "Authorization: yourPassword"
+```
+  </ApiSection>
+
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="Synced Lyrics (YouTube/Musixmatch/LRCLib)">
+```json
+{
+  "loadType": "lyrics",
+  "data": {
+    "synced": true,
+    "lang": "en",
+    "source": "youtube",
+    "lines": [
+      {
+        "text": "♪ We're no strangers to love ♪",
+        "time": 18640,
+        "duration": 3240
+      },
+      {
+        "text": "♪ You know the rules and so do I ♪",
+        "time": 22640,
+        "duration": 4320
+      },
+      {
+        "text": "♪ A full commitment's what I'm thinking of ♪",
+        "time": 27640,
+        "duration": 4100
+      }
+    ]
+  }
+}
+```
+      </Accordion>
+      <Accordion title="Plain Text Lyrics (Genius)">
+```json
+{
+  "loadType": "lyrics",
+  "data": {
+    "synced": false,
+    "lang": "en",
+    "source": "genius",
+    "lines": [
+      {
+        "text": "We're no strangers to love",
+        "time": null,
+        "duration": null
+      },
+      {
+        "text": "You know the rules and so do I",
+        "time": null,
+        "duration": null
+      },
+      {
+        "text": "A full commitment's what I'm thinking of",
+        "time": null,
+        "duration": null
+      }
+    ]
+  }
+}
+```
+      </Accordion>
+      <Accordion title="No Lyrics Found">
+```json
+{
+  "loadType": "empty",
+  "data": {}
+}
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="LoadChapters" method="GET" url="/v4/loadchapters" description="Retrieve chapter markers from YouTube videos.">
+  <ApiSection title="Query Parameters">
+    <ApiSchema name="encodedTrack" type="string" required description="Base64 encoded track string (YouTube videos only)" />
+  </ApiSection>
+
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/v4/loadchapters?encodedTrack=QAAAjQIAJVJpY2sgQXN0bGV5..." \
+     -H "Authorization: yourPassword"
+```
+  </ApiSection>
+
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="Video with Chapters">
+```json
+[
+  {
+    "title": "Introduction",
+    "start": 0,
+    "end": 30000
+  },
+  {
+    "title": "Verse 1",
+    "start": 30000,
+    "end": 75000
+  },
+  {
+    "title": "Chorus",
+    "start": 75000,
+    "end": 120000
+  },
+  {
+    "title": "Outro",
+    "start": 120000,
+    "end": 213000
+  }
+]
+```
+      </Accordion>
+      <Accordion title="No Chapters">
+```json
+[]
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
+## Direct Streaming
+
+<ApiCard name="TrackStream" method="GET" url="/v4/trackstream" description="Stream audio directly from NodeLink without Discord voice connection.">
+  <ApiSection title="Configuration">
+<Callout type="warn" title="Feature Must Be Enabled">
+This feature must be explicitly enabled in your configuration:
+
+```js
+// config.js
+enableTrackStreaming: true
+```
+
+```bash
+# Docker environment variable
+NODELINK_ENABLETRACKSTREAMING=true
+```
+</Callout>
+  </ApiSection>
+
+  <ApiSection title="Query Parameters">
+    <ApiSchema name="encodedTrack" type="string" required description="Base64 encoded track string" />
+    <ApiSchema name="itag" type="number" description="Specific YouTube itag for quality/format selection (e.g., 251 for opus)" />
+  </ApiSection>
+
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/v4/trackstream?encodedTrack=QAAAjQIAJVJpY2sgQXN0bGV5...&itag=251" \
+     -H "Authorization: yourPassword" \
+     --output audio.opus
+```
+  </ApiSection>
+
+  <ApiSection title="Use Cases">
+<Callout type="info" title="Common Applications">
+- Radio/streaming applications that need raw audio
+- Bot audio recording and archiving systems
+- Audio preview functionality
+- Custom audio processing pipelines
+- Downloading tracks for offline playback
+</Callout>
+
+<Callout type="warn" title="Security Warning">
+Enable this feature carefully as it allows direct audio downloads. Consider rate limiting and authentication.
+</Callout>
+  </ApiSection>
+
+  <ApiSection title="Response">
+Returns the audio stream directly with appropriate `Content-Type` header (e.g., `audio/opus`, `audio/webm`).
+  </ApiSection>
+</ApiCard>
+
+## Monitoring & Metrics
+
+<ApiCard name="Prometheus Metrics" method="GET" url="/v4/metrics" description="Detailed metrics in Prometheus format for monitoring and alerting.">
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/v4/metrics" \
+     -H "Authorization: yourPassword"
+```
+  </ApiSection>
+
+  <ApiSection title="Metric Categories">
+    <Accordions>
+      <Accordion title="Player Metrics">
+
+**`nodelink_players`**  
+Total number of active players across all guilds
+
+**`nodelink_playing_players`**  
+Players currently playing audio
+
+**`nodelink_frames_sent`**  
+Total audio frames sent to Discord
+
+**`nodelink_frames_nulled`**  
+Frames dropped due to processing issues
+
+**`nodelink_frames_deficit`**  
+Frame timing deficit (negative = ahead, positive = behind)
+
+**`nodelink_frames_expected`**  
+Expected frames based on player count
+
+      </Accordion>
+      <Accordion title="System Metrics">
+
+**`nodelink_uptime_ms`**  
+Server uptime in milliseconds
+
+**`nodelink_cpu_nodelink_load`**  
+NodeLink process CPU usage (0.0 to 1.0)
+
+**`nodejs_heap_size_used_bytes`**  
+V8 heap memory usage
+
+**`nodejs_external_memory_bytes`**  
+C++ objects and buffers memory
+
+**`process_resident_memory_bytes`**  
+Total physical RAM used (RSS)
+
+**`nodejs_eventloop_lag_*`**  
+Event loop lag (mean, p50, p99)
+
+**`nodejs_gc_duration_seconds`**  
+Garbage collection pause times
+
+**`process_open_fds` / `process_max_fds`**  
+File descriptor usage
+
+      </Accordion>
+      <Accordion title="API Metrics">
+
+**`nodelink_api_requests_total`**  
+Total API requests by endpoint
+
+**`nodejs_active_handles`**  
+Active network handles (sockets, TCP connections)
+
+**`nodejs_active_handles_total`**  
+Total active handles by type
+
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+
+  <ApiSection title="Grafana Dashboard">
+<Callout type="info" title="Pre-configured Dashboard">
+See the [Prometheus page](/prometheus) for a complete Grafana dashboard with pre-configured panels for all NodeLink metrics.
+</Callout>
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Detailed Stats" method="GET" url="/v4/stats" description="Extended statistics with per-source and per-endpoint usage tracking.">
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/v4/stats" \
+     -H "Authorization: yourPassword"
+```
+  </ApiSection>
+
+  <ApiSection title="Additional Fields">
+<Callout type="info" title="Enhanced Statistics">
+Beyond standard Lavalink stats, NodeLink includes `detailedStats` with granular usage metrics.
+</Callout>
+  </ApiSection>
+
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="Example Response">
+```json
+{
+  "players": 5,
+  "playingPlayers": 3,
+  "uptime": 3600000,
+  "memory": {...},
+  "cpu": {...},
+  "frameStats": {...},
+  "detailedStats": {
+    "api": {
+      "requests": {
+        "/v4/stats": 45,
+        "/v4/loadtracks": 1203,
+        "/v4/loadlyrics": 89,
+        "/v4/info": 12
+      },
+      "errors": {
+        "/v4/loadtracks": 3
+      }
+    },
+    "sources": {
+      "youtube": 850,
+      "spotify": 280,
+      "soundcloud": 73
+    },
+    "playback": {
+      "events": {
+        "TrackStartEvent": 523,
+        "TrackEndEvent": 520,
+        "TrackStuckEvent": 2,
+        "TrackExceptionEvent": 1
+      }
+    }
+  }
+}
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+
+  <ApiSection title="Use Cases">
+<Callout type="info" title="Useful For">
+- Identifying most used API endpoints
+- Tracking popular audio sources
+- Monitoring error rates per endpoint
+- Analyzing playback event distribution
+</Callout>
+  </ApiSection>
+</ApiCard>
+
+## Additional Filters
+
+NodeLink includes additional audio filters beyond the standard Lavalink filters, all processed in real-time.
+
+<ApiCard name="Echo" method="FILTER" url="echo" description="Creates delay-based repetitions with feedback control">
+  <ApiSection title="Parameters">
+    <ApiSchema name="delay" type="number" description="Delay time in milliseconds (0-5000ms)" />
+    <ApiSchema name="feedback" type="number" description="Amount of signal fed back (0.0-1.0)" />
+    <ApiSchema name="mix" type="number" description="Dry/wet mix ratio (0.0-1.0)" />
+  </ApiSection>
+
+  <ApiSection title="Example Usage">
+```json
+{
+  "filters": {
+    "echo": {
+      "delay": 500,
+      "feedback": 0.3,
+      "mix": 0.5
+    }
+  }
+}
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Chorus" method="FILTER" url="chorus" description="Simulates multiple voices with modulated delays">
+  <ApiSection title="Parameters">
+    <ApiSchema name="rate" type="number" description="LFO modulation rate in Hz" />
+    <ApiSchema name="depth" type="number" description="Modulation depth (0.0-1.0)" />
+    <ApiSchema name="delay" type="number" description="Base delay time in milliseconds (1-45ms)" />
+    <ApiSchema name="mix" type="number" description="Dry/wet mix ratio (0.0-1.0)" />
+    <ApiSchema name="feedback" type="number" description="Feedback amount (0.0-0.95)" />
+  </ApiSection>
+
+  <ApiSection title="Example Usage">
+```json
+{
+  "filters": {
+    "chorus": {
+      "rate": 1.5,
+      "depth": 0.5,
+      "delay": 25,
+      "mix": 0.6,
+      "feedback": 0.2
+    }
+  }
+}
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Compressor" method="FILTER" url="compressor" description="Dynamic range compression for balanced audio">
+  <ApiSection title="Parameters">
+    <ApiSchema name="threshold" type="number" description="Threshold level in dB" />
+    <ApiSchema name="ratio" type="number" description="Compression ratio (1.0 = no compression)" />
+    <ApiSchema name="attack" type="number" description="Attack time in milliseconds" />
+    <ApiSchema name="release" type="number" description="Release time in milliseconds" />
+    <ApiSchema name="gain" type="number" description="Makeup gain in dB" />
+  </ApiSection>
+
+  <ApiSection title="Example Usage">
+```json
+{
+  "filters": {
+    "compressor": {
+      "threshold": -20,
+      "ratio": 4,
+      "attack": 10,
+      "release": 100,
+      "gain": 5
+    }
+  }
+}
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Highpass" method="FILTER" url="highpass" description="Attenuates low frequencies">
+  <ApiSection title="Parameters">
+    <ApiSchema name="smoothing" type="number" description="Smoothing factor (>1.0 to enable)" />
+  </ApiSection>
+
+  <ApiSection title="Example Usage">
+```json
+{
+  "filters": {
+    "highpass": {
+      "smoothing": 20
+    }
+  }
+}
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Phaser" method="FILTER" url="phaser" description="Sweeps all-pass filters across frequency spectrum">
+  <ApiSection title="Parameters">
+    <ApiSchema name="stages" type="number" description="Filter stages (2-12)" />
+    <ApiSchema name="rate" type="number" description="LFO rate in Hz" />
+    <ApiSchema name="depth" type="number" description="Modulation depth (0.0-1.0)" />
+    <ApiSchema name="feedback" type="number" description="Feedback amount (0.0-0.9)" />
+    <ApiSchema name="mix" type="number" description="Dry/wet mix (0.0-1.0)" />
+    <ApiSchema name="minFrequency" type="number" description="Minimum sweep frequency in Hz" />
+    <ApiSchema name="maxFrequency" type="number" description="Maximum sweep frequency in Hz" />
+  </ApiSection>
+
+  <ApiSection title="Example Usage">
+```json
+{
+  "filters": {
+    "phaser": {
+      "stages": 6,
+      "rate": 0.5,
+      "depth": 0.7,
+      "feedback": 0.5,
+      "mix": 0.5,
+      "minFrequency": 200,
+      "maxFrequency": 2000
+    }
+  }
+}
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Spatial" method="FILTER" url="spatial" description="Creates spatial audio using cross-channel delays">
+  <ApiSection title="Parameters">
+    <ApiSchema name="depth" type="number" description="Effect depth (0.0-1.0)" />
+    <ApiSchema name="rate" type="number" description="Modulation rate in Hz" />
+  </ApiSection>
+
+  <ApiSection title="Example Usage">
+```json
+{
+  "filters": {
+    "spatial": {
+      "depth": 0.8,
+      "rate": 0.3
+    }
+  }
+}
+```
+  </ApiSection>
+</ApiCard>
+
+## Event Behavior
+
+NodeLink modifies when certain events are emitted for better accuracy.
+
+<ApiCard name="TrackStartEvent" method="EVENT" url="TrackStartEvent" description="Emitted only when audio stream actually begins">
+  <ApiSection title="Behavior">
+<Callout type="info" title="Enhanced Accuracy">
+Unlike Lavalink which emits TrackStartEvent immediately when you call update player, NodeLink waits until the audio stream actually starts flowing. This means you receive the event only when playback truly begins.
+
+This provides more accurate timing for tracking actual playback start times and prevents false positives when tracks fail to load after being queued.
+</Callout>
+  </ApiSection>
+</ApiCard>
