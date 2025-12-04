@@ -1,129 +1,176 @@
 ---
-title: Docker
-description: Pack your audio server in a box that works anywhere.
+title: Docker Deployment
+description: Ship your audio server in a container. Same code, anywhere. 🐳
 ---
 
 import { Callout } from 'fumadocs-ui/components/callout';
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 import { Steps, Step } from 'fumadocs-ui/components/steps';
 import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+import { Card, Cards } from 'fumadocs-ui/components/card';
 
-# Docker: The "It Just Works" Way
+# Docker: Because Production Should Just Work
 
-Look, we get it. Setting up servers can be a pain. Dependencies, versions, "works on my machine" excuses. Docker removes all of that.
+Look, we've all been there. You spend hours getting NodeLink running perfectly on your laptop. Everything works. Audio is crisp. No crashes. Life is good.
 
-It's like packing your entire audio server into a box. A box that works on your laptop, your server, your friend's Raspberry Pi, anywhere.
+Then you deploy to production and... it doesn't work. Wrong Node version. Missing dependencies. Something about native modules. Your weekend is gone.
 
-**Clone. Configure. Run.** That's it.
+**Docker fixes this.** It's not magic. It's just consistency. Same environment, same dependencies, same behavior—whether you're running on your gaming PC, a $5 VPS, or an enterprise Kubernetes cluster.
 
----
-
-## Why Docker?
-
-Because you have better things to do than debug Node.js installation issues at 3 AM.
-
-Docker gives you:
-
-- **Zero setup headaches** - Node.js, dependencies, everything is already handled
-- **Consistent behavior** - Same experience on any machine
-- **Easy updates** - `docker compose up --build` and you're done
-- **Isolation** - NodeLink runs in its own world, not touching your system
-
-Think of it as shipping a ready-to-run application instead of assembly instructions.
+<Callout type="info" title="What Docker Actually Does">
+  Docker wraps your application with everything it needs (Node.js, system libraries, native modules) into an image. That image runs the same way everywhere. No surprises. No "works on my machine" excuses.
+</Callout>
 
 ---
 
-## The Repository Already Has Everything
+## Why Bother With Containers?
 
-Seriously. The NodeLink repository comes with:
+Because you have better things to do than fight with package managers at 3 AM trying to get `sodium-native` to compile.
 
-- A complete `Dockerfile` (production-ready, multi-stage build)
-- A full `docker-compose.yml` with **every single configuration option**
-- Everything documented inline
+Docker gives you instant setup where you don't need to manually install Node.js v22+. No hunting down build tools for native modules. No dependency resolution nightmares. Just pull the image and run. Your NodeLink instance lives in perfect isolation, in its own world where it can't interfere with your system and nothing can interfere with it. Clean slate every time you start it.
 
-You don't need to copy-paste anything. Just clone and edit what you need.
+Updates become trivial. New version? Just `docker compose pull && docker compose up -d` and you're done. Need to rollback? Same commands, different tag. The portability is real too—it runs on Linux, Windows, macOS, ARM, x86, cloud, bare metal. If Docker exists there, NodeLink runs there.
+
+<Cards>
+  <Card title="Zero Native Build Issues">
+    Native modules like `sodium-native` for encryption are already compiled in the image. No gcc, no python, no build-essential needed.
+  </Card>
+  <Card title="Worker Architecture Ready">
+    The image is optimized for NodeLink's worker-based architecture. Cluster mode works out of the box without manual configuration.
+  </Card>
+  <Card title="Production Hardened">
+    Health checks, restart policies, and security best practices are configured. Not something you cobbled together from a tutorial.
+  </Card>
+  <Card title="True Portability">
+    The same image that runs on your laptop runs in production. No environment-specific bugs. No surprise differences.
+  </Card>
+</Cards>
 
 ---
 
-## Let's Do This
+## The Setup Is Already Done
+
+The NodeLink repository includes a production-ready Docker setup. No assembly required.
+
+We already built a multi-stage `Dockerfile` that compiles native modules in a build stage and copies only what's needed to the runtime stage. The result is a lean image optimized for size and security. The `docker-compose.yml` includes every single configuration option NodeLink supports, all documented inline with examples. Health checks verify NodeLink is actually responding, not just that the container is running. Restart policies ensure it comes back up automatically if it crashes. Volume mounts are configured for local music files and log persistence.
+
+You don't need to piece this together yourself. You don't need to understand Docker internals. Just clone the repo, adjust the handful of settings that matter to you, and launch.
+
+---
+
+## Getting Started
 
 <Steps>
 
 <Step>
-### Get Docker
 
-You need Docker and Docker Compose installed. If you don't have them:
+### Install Docker
 
-- [Docker Engine](https://docs.docker.com/engine/install/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
+You need Docker and Docker Compose. If you don't have them yet, get them from the official sources.
 
-Quick check:
+<Tabs items={['Linux', 'Windows', 'macOS']}>
+  <Tab value="Linux">
+    For Ubuntu/Debian, use the official Docker repository for the latest version:
+    
+    ```bash
+    # Add Docker's official GPG key
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    
+    # Add Docker repository
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    
+    # Install Docker Engine
+    sudo apt update
+    sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+    ```
+    
+    For other distributions, check the [official installation guide](https://docs.docker.com/engine/install/).
+  </Tab>
+  <Tab value="Windows">
+    Download and install **Docker Desktop for Windows** from [docker.com](https://www.docker.com/products/docker-desktop/).
+    
+    Docker Desktop includes both Docker Engine and Docker Compose. After installation, you'll need to restart your computer.
+    
+    Make sure WSL2 is enabled if you're on Windows 10/11. Docker Desktop will prompt you to install it if needed.
+  </Tab>
+  <Tab value="macOS">
+    Download and install **Docker Desktop for Mac** from [docker.com](https://www.docker.com/products/docker-desktop/).
+    
+    Docker Desktop includes both Docker Engine and Docker Compose. Works on both Intel and Apple Silicon Macs.
+  </Tab>
+</Tabs>
+
+Verify everything is working:
 
 ```bash
 docker --version
 docker compose version
 ```
 
-If these commands work, you're golden.
+If both commands output version numbers, you're ready.
 
 </Step>
 
 <Step>
+
 ### Clone NodeLink
+
+Get the repository to your machine:
 
 ```bash
 git clone https://github.com/PerformanC/NodeLink.git
 cd NodeLink
 ```
 
-Boom. You now have everything.
+You now have everything. The Dockerfile, the docker-compose.yml, all of it.
 
 </Step>
 
 <Step>
-### Configure (The Important Part)
 
-Open `docker-compose.yml` in your favorite editor.
+### Configure Your Instance
 
-**Required changes:**
+Open `docker-compose.yml` in your editor. You'll see a massive file with every configuration option documented. Most of it you can leave as-is. Here's what you **must** change:
 
 ```yaml
 environment:
-  NODELINK_SERVER_PASSWORD: "youshallnotpass" # ⚠️ CHANGE THIS!
+  NODELINK_SERVER_PASSWORD: "youshallnotpass" # ⚠️ CHANGE THIS NOW
 ```
 
 <Callout type="warn" title="Don't Skip This">
-Using the default password in production is like leaving your front door open. Change it.
+  Using the default password in production is like leaving your front door open with a sign that says "free stuff inside." Change it. Use something long and random.
 </Callout>
 
-**Recommended changes:**
+**Optional but recommended** configurations depend on what you need:
 
-If you want Spotify support:
-
-```yaml
-NODELINK_SOURCES_SPOTIFY_CLIENTID: "your_client_id"
-NODELINK_SOURCES_SPOTIFY_CLIENTSECRET: "your_client_secret"
-```
-
-If you want YouTube cipher (for better YouTube support):
+If you want **Spotify support**, you'll need credentials from the Spotify Developer Dashboard:
 
 ```yaml
-NODELINK_SOURCES_YOUTUBE_CIPHER_TOKEN: "your_token" # Get from cipher.kikkia.dev
+NODELINK_SOURCES_SPOTIFY_ENABLED: "true"
+NODELINK_SOURCES_SPOTIFY_CLIENTID: "your_actual_spotify_client_id"
+NODELINK_SOURCES_SPOTIFY_CLIENTSECRET: "your_actual_spotify_client_secret"
 ```
 
-Want to use all your CPU cores? Enable cluster mode:
+If you want better **YouTube support** (helps with age-restricted and some region-locked content), get a token from `cipher.kikkia.dev`:
+
+```yaml
+NODELINK_SOURCES_YOUTUBE_CIPHER_TOKEN: "your_cipher_token"
+```
+
+If you want to **use all your CPU cores** for better performance under load, enable cluster mode:
 
 ```yaml
 NODELINK_CLUSTER_ENABLED: "true"
-NODELINK_CLUSTER_WORKERS: "0" # 0 = all cores
+NODELINK_CLUSTER_WORKERS: "0" # 0 means use all available CPU cores
 ```
 
-Everything else? **Already configured with sane defaults.** You can leave it as-is or dive into the 200+ configuration options in the file.
+Everything else has sensible defaults. You can explore the 200+ other options in the file when you need them.
 
 </Step>
 
 <Step>
-### Run It
+
+### Launch It
 
 One command:
 
@@ -131,31 +178,31 @@ One command:
 docker compose up -d
 ```
 
-That's it. Docker will:
-1. Build the NodeLink image from the Dockerfile
-2. Install all dependencies
-3. Start NodeLink on port 3000
+Docker will build the NodeLink image from the Dockerfile, compile native modules, install dependencies, and start the server. The `-d` flag runs it in detached mode (background).
 
-The `-d` flag runs it in the background.
+This takes a few minutes the first time while it builds the image. Subsequent starts are instant.
 
 </Step>
 
 <Step>
-### Verify
 
-Check if it's alive:
+### Verify It's Alive
+
+Check if NodeLink is responding:
 
 ```bash
-curl http://localhost:3000/version
+curl http://localhost:2333/version
 ```
 
-You should see the NodeLink version. If you do, congrats. You're running.
+You should see version information. If you do, NodeLink is running and ready to connect to your Discord bot.
 
-Check logs if something's wrong:
+If something went wrong, check the logs:
 
 ```bash
 docker compose logs -f nodelink
 ```
+
+The `-f` flag follows the logs in real-time. Press Ctrl+C to exit.
 
 </Step>
 
@@ -163,55 +210,53 @@ docker compose logs -f nodelink
 
 ---
 
-## What's in the Box?
+## Understanding the Configuration
 
-The included `docker-compose.yml` has **everything** documented. Literally every option NodeLink supports.
+The `docker-compose.yml` file is massive because it exposes every single configuration option NodeLink supports as environment variables. Most of them you'll never touch. Here's what's actually in there:
 
 <Accordions>
 
 <Accordion title="Server Basics">
 
+These control where NodeLink listens and how clients authenticate:
+
 ```yaml
-environment:
-  NODELINK_SERVER_HOST: "0.0.0.0"
-  NODELINK_SERVER_PORT: "3000"
-  NODELINK_SERVER_PASSWORD: "youshallnotpass" # CHANGE THIS
+NODELINK_SERVER_HOST: "0.0.0.0"  # Listen on all interfaces
+NODELINK_SERVER_PORT: "2333"      # Default Lavalink port
+NODELINK_SERVER_PASSWORD: "youshallnotpass"  # Change this
 ```
 
-Simple. The server listens on all interfaces, port 3000, with your password.
+The host `0.0.0.0` means NodeLink accepts connections from anywhere. If you only want localhost access, use `127.0.0.1`. The port `2333` is the standard Lavalink port. Most clients expect this, but you can change it if needed.
 
 </Accordion>
 
-<Accordion title="Cluster Mode (Multi-Core Power)">
+<Accordion title="Cluster Mode for Performance">
+
+NodeLink uses a worker-based architecture where heavy tasks like playlist parsing happen in separate processes. This keeps your main audio loop smooth. Cluster mode takes this further by running multiple worker processes:
 
 ```yaml
 NODELINK_CLUSTER_ENABLED: "true"
-NODELINK_CLUSTER_WORKERS: "0" # 0 = all CPU cores
+NODELINK_CLUSTER_WORKERS: "0"           # 0 = use all CPU cores
 NODELINK_CLUSTER_MINWORKERS: "1"
 NODELINK_CLUSTER_MAXPLAYERSPERWORKER: "20"
 ```
 
-Why cluster mode?
-
-- **Better CPU usage** - Use all your cores, not just one
-- **Auto-scaling** - Workers spawn and die based on load
-- **Reliability** - One worker crashes? Others keep running
-
-Set `WORKERS` to `0` and NodeLink uses all your cores automatically. Or pick a number (e.g., `4` for 4 workers).
+Why cluster mode? Better CPU utilization across cores. Auto-scaling where workers spawn and die based on player load. Reliability where one worker crashing doesn't take down the whole server. Set `WORKERS` to `0` and NodeLink automatically uses all your cores. Or specify a number like `4` for exactly 4 workers.
 
 </Accordion>
 
 <Accordion title="Audio Sources">
 
-**YouTube** (enabled by default):
+NodeLink supports multiple audio sources. Each can be enabled or disabled independently:
+
+**YouTube** (enabled by default, the backbone of most music bots):
 
 ```yaml
 NODELINK_SOURCES_YOUTUBE_ENABLED: "true"
-NODELINK_SOURCES_YOUTUBE_CIPHER_URL: "https://cipher.kikkia.dev/api"
-NODELINK_SOURCES_YOUTUBE_CIPHER_TOKEN: "your_token"
+NODELINK_SOURCES_YOUTUBE_CIPHER_TOKEN: ""  # Optional, helps with some restricted content
 ```
 
-**Spotify**:
+**Spotify** (requires API credentials):
 
 ```yaml
 NODELINK_SOURCES_SPOTIFY_ENABLED: "true"
@@ -219,82 +264,105 @@ NODELINK_SOURCES_SPOTIFY_CLIENTID: "your_id"
 NODELINK_SOURCES_SPOTIFY_CLIENTSECRET: "your_secret"
 ```
 
-**Others**: SoundCloud, Deezer, Apple Music, Tidal, Bandcamp, Twitch, and more. All in the file. All documented.
+**Local files** (play music from your server's filesystem):
+
+```yaml
+NODELINK_SOURCES_LOCAL_ENABLED: "true"
+NODELINK_SOURCES_LOCAL_BASEPATH: "/app/music/"
+```
+
+**Others**: SoundCloud, Deezer, Apple Music, Tidal, Bandcamp, Twitch, Nico Nico, and more. All in the config file. All documented inline. Most work without additional setup.
 
 </Accordion>
 
 <Accordion title="Audio Filters">
 
-All filters are enabled by default:
+NodeLink includes audio filters for real-time audio modification. Standard filters like Equalizer, Karaoke, Timescale, Tremolo, Vibrato, Rotation, Distortion, and Channel Mix are all enabled by default. NodeLink-exclusive filters like Echo, Chorus, Compressor, High Pass, Phaser, and Spatial are also available.
 
-- Standard: Equalizer, Karaoke, Timescale, Tremolo, Vibrato, Rotation, Distortion, Channel Mix, Low Pass
-- NodeLink Exclusive: Echo, Chorus, Compressor, High Pass, Phaser, Spatial
-
-Want to disable a specific filter?
+All filters are processed natively without external tools. Want to disable a specific filter? Just set it to false:
 
 ```yaml
 NODELINK_FILTERS_ENABLED_ECHO: "false"
 ```
 
+You can combine multiple filters simultaneously. NodeLink processes them efficiently in the audio pipeline without significant overhead.
+
 </Accordion>
 
-<Accordion title="Lyrics">
+<Accordion title="Lyrics Integration">
 
-Multiple sources, automatically tried in order:
+NodeLink tries multiple lyric sources automatically in order until one succeeds:
 
 ```yaml
-NODELINK_LYRICS_YOUTUBE_ENABLED: "true"
-NODELINK_LYRICS_GENIUS_ENABLED: "true"
-NODELINK_LYRICS_MUSIXMATCH_ENABLED: "true"
-NODELINK_LYRICS_LRCLIB_ENABLED: "true"
+NODELINK_LYRICS_YOUTUBE_ENABLED: "true"      # Synced captions when available
+NODELINK_LYRICS_GENIUS_ENABLED: "true"        # Plain text lyrics
+NODELINK_LYRICS_MUSIXMATCH_ENABLED: "true"    # Synced lyrics (auto-obtains signature)
+NODELINK_LYRICS_LRCLIB_ENABLED: "true"        # Open-source synced lyrics
 ```
 
-NodeLink tries YouTube first, then Musixmatch, then LRCLib, then Genius. First one that works wins.
+NodeLink tries YouTube first for synced captions. If that fails, it tries Musixmatch. Then LRCLib. Finally Genius. First source that returns lyrics wins. This happens automatically when you request lyrics via the API.
 
 </Accordion>
 
-<Accordion title="Monitoring (Prometheus)">
+<Accordion title="Monitoring with Prometheus">
+
+NodeLink can expose Prometheus metrics for production monitoring:
 
 ```yaml
 NODELINK_METRICS_ENABLED: "true"
 NODELINK_METRICS_AUTHORIZATION_TYPE: "Bearer"
+NODELINK_METRICS_AUTHORIZATION_PASSWORD: ""  # Empty = use server password
 ```
 
-Metrics endpoint: `http://localhost:3000/v4/metrics`
+<Callout type="warn" title="Optional Dependency Required">
+Prometheus metrics require the `prom-client` package to be installed:
 
-Set up Grafana, point it at NodeLink, get beautiful dashboards. See the [Prometheus page](/docs/prometheus) for details.
+```bash
+npm install prom-client
+```
+
+Without this package, NodeLink will throw an error if metrics are enabled in your configuration. You can disable metrics by setting `metrics.enabled: false` in your config file.
+</Callout>
+
+The metrics endpoint becomes available at `/v4/metrics`. Point your Prometheus scraper at it. Get insights into audio frame delivery, memory usage, event loop lag, player counts, and more. See the [Prometheus documentation](/docs/advenced/prometheus) for dashboard examples.
 
 </Accordion>
 
-<Accordion title="Security (Rate Limiting & DoS Protection)">
+<Accordion title="Security Features">
+
+NodeLink includes rate limiting and DoS protection out of the box:
 
 ```yaml
 NODELINK_RATELIMIT_ENABLED: "true"
 NODELINK_RATELIMIT_GLOBAL_MAXREQUESTS: "1000"
-NODELINK_RATELIMIT_GLOBAL_TIMEWINDOWMS: "60000" # 1 minute
+NODELINK_RATELIMIT_GLOBAL_TIMEWINDOWMS: "60000"  # 1 minute
 
 NODELINK_DOSPROTECTION_ENABLED: "true"
 NODELINK_DOSPROTECTION_THRESHOLDS_BURSTREQUESTS: "50"
 ```
 
-Protection against spam and abuse. Already configured. Already working.
+These defaults protect against spam and abuse without affecting normal usage. Global rate limiting caps total requests per IP. DoS protection detects and blocks burst traffic patterns. Both are enabled by default and just work.
 
 </Accordion>
 
-<Accordion title="Logging">
+<Accordion title="Logging Configuration">
+
+Control how verbose NodeLink is and where logs go:
 
 ```yaml
-NODELINK_LOGGING_LEVEL: "info" # debug, info, warn, error
+NODELINK_LOGGING_LEVEL: "info"  # debug, info, warn, error
 NODELINK_LOGGING_FILE_ENABLED: "false"
 NODELINK_LOGGING_FILE_PATH: "logs"
 ```
 
-Want file logs? Enable it and mount a volume:
+The default `info` level shows important events without noise. Use `debug` when troubleshooting issues. If you enable file logging, mount a volume to persist logs:
 
 ```yaml
 volumes:
   - ./logs:/app/logs
 ```
+
+Logs will appear in the `logs` directory on your host machine.
 
 </Accordion>
 
@@ -302,111 +370,207 @@ volumes:
 
 ---
 
-## Common Commands
+## Common Operations
 
-You'll use these often:
+Commands you'll use regularly:
 
-```bash
-# Start NodeLink
-docker compose up -d
-
-# Stop NodeLink
-docker compose down
-
-# Restart NodeLink
-docker compose restart
-
-# View logs (follow mode)
-docker compose logs -f nodelink
-
-# Update NodeLink
-git pull
-docker compose up -d --build
-
-# Check status
-docker compose ps
-
-# Access container shell
-docker compose exec nodelink sh
-```
+<Tabs items={['Start/Stop', 'Logs', 'Updates', 'Shell Access']}>
+  <Tab value="Start/Stop">
+    ```bash
+    # Start NodeLink in background
+    docker compose up -d
+    
+    # Stop NodeLink
+    docker compose down
+    
+    # Restart NodeLink (reload config changes)
+    docker compose restart
+    
+    # Check if running
+    docker compose ps
+    ```
+  </Tab>
+  <Tab value="Logs">
+    ```bash
+    # View logs (follow mode)
+    docker compose logs -f nodelink
+    
+    # View last 100 lines
+    docker compose logs --tail=100 nodelink
+    
+    # View logs from specific time
+    docker compose logs --since 30m nodelink
+    ```
+  </Tab>
+  <Tab value="Updates">
+    ```bash
+    # Update to latest version
+    cd NodeLink
+    git pull
+    docker compose up -d --build
+    
+    # Or using Docker Hub images
+    docker compose pull
+    docker compose up -d
+    ```
+  </Tab>
+  <Tab value="Shell Access">
+    ```bash
+    # Access container shell
+    docker compose exec nodelink sh
+    
+    # Run commands inside container
+    docker compose exec nodelink npm run --version
+    ```
+  </Tab>
+</Tabs>
 
 ---
 
 ## Using Pre-built Images
 
-Don't want to build from source? Use Docker Hub images:
+Don't want to build from source every time? Use the pre-built images from Docker Hub:
 
 ```yaml
 services:
   nodelink:
     image: performanc/nodelink:latest
-    # ... rest of config ...
+    # ... rest of your config ...
 ```
 
-Tags:
-- `latest` - Most recent stable
-- `v3.1.1` - Specific version
-- `dev` - Bleeding edge (may break)
+Available tags:
+
+<Cards>
+  <Card title="latest">
+    Most recent stable release. Updated with each new version. Safe for production.
+  </Card>
+  <Card title="v3.1.1">
+    Specific version tags. Pin to a version for consistency. Useful when you want predictable behavior.
+  </Card>
+  <Card title="dev">
+    Bleeding edge from main branch. Gets new features first. May break occasionally. Not for production.
+  </Card>
+</Cards>
+
+Using pre-built images means faster deployments. No compile time. Just pull and run. The tradeoff is slightly larger images since they're built for multiple architectures.
 
 ---
 
 ## Local Music Files
 
-Want to play music from your hard drive?
+Want to play music from your server's hard drive? NodeLink's local source lets you stream files directly from the filesystem.
 
-1. Create a folder: `mkdir local-music`
-2. Put your audio files there
-3. Mount it in `docker-compose.yml`:
+<Steps>
 
-```yaml
-volumes:
-  - ./local-music:/app/local-music
+<Step>
 
-environment:
-  NODELINK_SOURCES_LOCAL_ENABLED: "true"
-  NODELINK_SOURCES_LOCAL_BASEPATH: "/app/local-music/"
+### Create Music Directory
+
+Make a folder for your music files:
+
+```bash
+mkdir local-music
 ```
 
-Now you can load tracks like: `file:///app/local-music/song.mp3`
+Put your audio files there. NodeLink supports common formats like MP3, FLAC, WAV, OGG, M4A, and more.
+
+</Step>
+
+<Step>
+
+### Mount Volume
+
+Edit your `docker-compose.yml` to mount the directory:
+
+```yaml
+services:
+  nodelink:
+    volumes:
+      - ./local-music:/app/music
+    environment:
+      NODELINK_SOURCES_LOCAL_ENABLED: "true"
+      NODELINK_SOURCES_LOCAL_BASEPATH: "/app/music/"
+```
+
+The volume mount makes your `local-music` folder appear inside the container at `/app/music`. The basepath tells NodeLink where to look for files.
+
+</Step>
+
+<Step>
+
+### Load Tracks
+
+Restart NodeLink to apply changes:
+
+```bash
+docker compose restart
+```
+
+Now you can load tracks using the `file://` protocol:
+
+```
+file:///app/music/song.mp3
+file:///app/music/albums/album1/track.flac
+```
+
+The path must start with the basepath you configured. NodeLink resolves the file and streams it like any other source.
+
+</Step>
+
+</Steps>
+
+<Callout title="Security Note">
+  Local file access is powerful but requires careful configuration. NodeLink validates paths to prevent directory traversal attacks. Still, only enable this if you control the filesystem and know who can access the API.
+</Callout>
 
 ---
 
-## Production Tips
+## Production Deployment
 
-<Callout type="warn" title="Before Going Live">
-**Security checklist:**
-- [ ] Changed default password
-- [ ] Enabled rate limiting (already on)
-- [ ] Enabled DoS protection (already on)
-- [ ] Using HTTPS reverse proxy (Nginx/Caddy)
-- [ ] Firewall rules configured
-- [ ] Regular backups of config
-</Callout>
+Running NodeLink in production requires a few extra considerations beyond just starting the container.
 
-### Reverse Proxy (Nginx Example)
+### Reverse Proxy Setup
 
-NodeLink should sit behind a reverse proxy in production:
+NodeLink should sit behind a reverse proxy in production for SSL termination and security. Here's an Nginx example:
 
 ```nginx
 server {
     listen 80;
     server_name audio.yourdomain.com;
+    
+    # Redirect HTTP to HTTPS
+    return 301 https://$server_name$request_uri;
+}
 
+server {
+    listen 443 ssl http2;
+    server_name audio.yourdomain.com;
+    
+    # SSL certificates (use certbot for Let's Encrypt)
+    ssl_certificate /etc/letsencrypt/live/audio.yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/audio.yourdomain.com/privkey.pem;
+    
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:2333;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
         proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # WebSocket support
+        proxy_read_timeout 86400;
     }
 }
 ```
 
-Add SSL with Certbot and you're golden.
+This configuration handles HTTPS, WebSocket upgrades, and proper header forwarding. Get SSL certificates from Let's Encrypt using certbot. It's free and automated.
 
 ### Resource Limits
 
-Prevent NodeLink from eating all your RAM:
+Prevent NodeLink from consuming all system resources if something goes wrong:
 
 ```yaml
 services:
@@ -414,100 +578,189 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2.0'
-          memory: 2G
+          cpus: '2.0'      # Max 2 CPU cores
+          memory: 2G       # Max 2GB RAM
+        reservations:
+          cpus: '0.5'      # Reserve half a core
+          memory: 512M     # Reserve 512MB RAM
 ```
+
+These limits depend on your player count. More simultaneous players need more resources. Monitor actual usage and adjust accordingly.
 
 ### Health Checks
 
-Make sure NodeLink is actually alive:
+Docker can monitor if NodeLink is actually responding, not just that the container is running:
 
 ```yaml
 healthcheck:
-  test: ["CMD", "curl", "-f", "http://localhost:3000/version"]
+  test: ["CMD", "curl", "-f", "http://localhost:2333/version"]
   interval: 30s
   timeout: 10s
   retries: 3
+  start_period: 40s
 ```
+
+If the health check fails three times, Docker marks the container as unhealthy. Combined with restart policies, this provides automatic recovery from crashes or hangs.
+
+### Firewall Configuration
+
+If NodeLink runs on a remote server, allow incoming connections:
+
+```bash
+# UFW (Ubuntu/Debian)
+sudo ufw allow 2333/tcp
+
+# firewalld (CentOS/RHEL)
+sudo firewall-cmd --add-port=2333/tcp --permanent
+sudo firewall-cmd --reload
+```
+
+Only open ports you actually use. If NodeLink is behind a reverse proxy, you might only need to open 80/443 for the proxy and keep 2333 local-only.
+
+### Security Checklist
+
+Before going live, verify these points:
+
+<Accordions>
+  <Accordion title="Authentication">
+    - [ ] Changed default password to something strong and random
+    - [ ] Server password is not committed to version control
+    - [ ] Metrics endpoint uses separate authentication if exposed publicly
+  </Accordion>
+  <Accordion title="Network Security">
+    - [ ] NodeLink is behind HTTPS reverse proxy
+    - [ ] Firewall rules limit access to only necessary ports
+    - [ ] Rate limiting is enabled
+    - [ ] DoS protection is enabled
+  </Accordion>
+  <Accordion title="Operational Security">
+    - [ ] Health checks are configured
+    - [ ] Restart policy is set to handle crashes
+    - [ ] Logs are being collected somewhere
+    - [ ] Resource limits prevent runaway usage
+    - [ ] Backups exist for configuration
+  </Accordion>
+</Accordions>
 
 ---
 
 ## Troubleshooting
 
-### Container won't start
+### Container Won't Start
+
+Check the logs for specific errors:
 
 ```bash
 docker compose logs nodelink
 ```
 
-Common issues:
-- Port 3000 already in use → Change the port mapping
-- Missing credentials → Check Spotify/YouTube config
-- Invalid YAML syntax → Validate your docker-compose.yml
+Common problems and fixes:
 
-### Can't connect from Discord bot
+**Port already in use**: Something else is listening on 2333. Either stop that process or change NodeLink's port in `docker-compose.yml`:
 
-Check firewall:
-
-```bash
-sudo ufw allow 3000/tcp
+```yaml
+ports:
+  - "2334:2333"  # Use 2334 externally, 2333 internally
 ```
 
-Verify NodeLink is accessible:
+**Permission denied**: Docker doesn't have permission to bind the port or access volumes. On Linux, add your user to the docker group:
 
 ```bash
-curl http://your-server-ip:3000/version
+sudo usermod -aG docker $USER
 ```
 
-### High CPU usage
+Log out and back in for the change to take effect.
 
-Enable cluster mode if you haven't:
+**Invalid configuration**: Check for typos in `docker-compose.yml`. YAML is whitespace-sensitive. Use a validator if unsure.
+
+### Can't Connect from Discord Bot
+
+First, verify NodeLink is accessible from outside the container:
+
+```bash
+curl http://your-server-ip:2333/version
+```
+
+If this fails, check your firewall rules. If it succeeds but your bot still can't connect, verify the password matches between your bot config and `docker-compose.yml`.
+
+For remote servers, ensure the firewall allows incoming connections:
+
+```bash
+sudo ufw status
+```
+
+The port (default 2333) should be listed as allowed.
+
+### High CPU Usage
+
+Check how many players are active:
+
+```bash
+curl http://localhost:2333/v4/stats -H "Authorization: yourPassword"
+```
+
+Look at the `players` and `playingPlayers` counts. High CPU with many players is normal. If CPU is high with few players, enable cluster mode:
 
 ```yaml
 NODELINK_CLUSTER_ENABLED: "true"
+NODELINK_CLUSTER_WORKERS: "0"  # Use all cores
 ```
 
-### Audio cutting out
+Restart after changing the config.
 
-Increase update interval:
+### Audio Cutting Out
+
+This usually indicates network issues or event loop blocking. Check frame statistics in the stats endpoint:
+
+```bash
+curl http://localhost:2333/v4/stats -H "Authorization: yourPassword"
+```
+
+Look at `frameStats`. If `deficit` is positive or `nulled` is increasing, audio is being dropped. Try increasing the update interval:
 
 ```yaml
 NODELINK_PLAYERUPDATEINTERVAL: "1000"
 ```
 
-Check your network latency to Discord voice servers.
+Also check network latency between your server and Discord voice servers. High latency causes problems.
+
+### Memory Growing Over Time
+
+External memory grows with active players. This is normal. Each player holds audio buffers for smooth playback. Memory should stabilize once player count is constant. If memory keeps growing even without new players, that might indicate a leak. Report it with logs and reproduction steps.
 
 ---
 
 ## The Real Talk
 
-Docker makes this **dead simple**. You don't need to be a DevOps wizard. You don't need to understand Dockerfiles or multi-stage builds or any of that.
+Docker makes deploying NodeLink almost trivial. You don't need to be a DevOps expert. You don't need to understand multi-stage builds or image layers or any of that.
 
-The repository already has everything. Just:
+The repository already has everything configured. A production-ready Dockerfile optimized for NodeLink's native modules and worker architecture. A comprehensive docker-compose.yml with every option documented. Health checks and restart policies. Security features enabled by default.
 
-1. Clone it
-2. Change the password
-3. Run `docker compose up -d`
+Just clone it, change the password, and run `docker compose up -d`. That's literally the deployment process.
 
-That's the entire deployment process.
+Everything else in this document is optional. The defaults work. The configuration makes sense. The security is reasonable. You can deploy NodeLink to production with a handful of environment variables and be confident it'll run reliably.
 
-Everything else? Optional. The defaults work. The config is sane. The documentation is inline.
-
-**You can start making noise in under 5 minutes.**
+**You can go from zero to streaming audio in about 5 minutes.**
 
 ---
 
 ## What's Next?
 
-Now that NodeLink is running:
+Now that NodeLink is containerized and running:
 
-1. Connect your Discord bot to `http://localhost:3000`
-2. Enable sources you need (Spotify, Apple Music, etc.)
-3. Explore the [API Reference](/docs/api/rest) to see what you can do
-4. Set up [Prometheus monitoring](/docs/prometheus) if you're into that
-5. Play with [audio filters](/docs/api/nodelink-features#audio-filters) for fun effects
+<Cards>
+  <Card title="Connect Your Bot" href="/docs/api/websocket">
+    Point your Discord bot at your NodeLink instance. Use the WebSocket API to manage players.
+  </Card>
+  <Card title="Configure Sources" href="/docs/config">
+    Enable Spotify, Apple Music, or other sources. Configure API keys and credentials.
+  </Card>
+  <Card title="Set Up Monitoring" href="/docs/advenced/prometheus">
+    Add Prometheus metrics and Grafana dashboards. Know exactly how your instance is performing.
+  </Card>
+  <Card title="Explore Features" href="/docs/api/nodelink-features">
+    Try lyrics support, chapter markers, direct streaming, and NodeLink-exclusive filters.
+  </Card>
+</Cards>
 
-The code is open. The configs are clear. The possibilities? Endless.
-
-Go build something cool. 🎵
-
+The code is open. The configs are documented. The community is active. Go build something cool with it. 💙
