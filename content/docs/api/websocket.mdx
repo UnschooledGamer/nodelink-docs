@@ -1,0 +1,500 @@
+---
+title: WebSocket API
+description: Real-time events and session management via WebSocket connection.
+---
+
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+import { ApiCard, ApiSection, ApiSchema } from '@/components/api-ui';
+
+# WebSocket API
+
+NodeLink uses WebSocket connections to provide real-time communication between the server and clients. This connection is essential for receiving player events, track updates, and server statistics.
+
+## Connection
+
+<ApiCard name="WebSocket Endpoint" method="WS" url="/v4/websocket" description="Connect to this endpoint to establish a WebSocket session.">
+  <ApiSection title="Headers">
+    <ApiSchema name="Authorization" type="string" required description="The server password defined in config.js." />
+    <ApiSchema name="Client-Name" type="string" required description='Name and version of your client (e.g., "MyMusicBot/1.0.0").' />
+    <ApiSchema name="User-Id" type="string" required description="Discord User ID of the bot. Must be 18-19 digits." />
+    <ApiSchema name="Session-Id" type="string" description="Session ID to resume. If provided, attempts to resume previous session." />
+  </ApiSection>
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="New Session">
+```json
+{
+  "op": "ready",
+  "resumed": false,
+  "sessionId": "a1b2c3d4e5f6g7h8"
+}
+```
+      </Accordion>
+      <Accordion title="Resumed Session">
+```json
+{
+  "op": "ready",
+  "resumed": true,
+  "sessionId": "a1b2c3d4e5f6g7h8"
+}
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Session Resumption" description="Resume a previous session after disconnection within the timeout period (default: 60 seconds).">
+  <ApiSection title="Response">
+When successfully resumed using the `Session-Id` header, the server sends a ready event with `resumed: true`. All queued events from the disconnection period are immediately sent, followed by current state updates from all active players.
+  </ApiSection>
+</ApiCard>
+
+## Incoming Events (Server → Client)
+
+NodeLink sends various events to keep clients informed about playback status, player state, and server statistics. All events are sent as JSON messages.
+
+### Ready Event
+
+<ApiCard name="ReadyEvent" method="EVENT" description="Sent immediately after WebSocket connection is established.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "ready"' />
+    <ApiSchema name="resumed" type="boolean" description="Whether this is a resumed session or new session" />
+    <ApiSchema name="sessionId" type="string" description="Unique session identifier for this connection" />
+  </ApiSection>
+  <ApiSection title="Example">
+```json
+{
+  "op": "ready",
+  "resumed": false,
+  "sessionId": "xY7kP2mN8vQ4rL1s"
+}
+```
+  </ApiSection>
+</ApiCard>
+
+### Player Update
+
+<ApiCard name="PlayerUpdate" method="EVENT" description="Sent periodically (every 5 seconds) with current playback position and connection status for each active player.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "playerUpdate"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID where player is active" />
+    <ApiSchema name="state" type="object" description="Current player state" />
+    <ApiSchema name="state.time" type="number" description="Current Unix timestamp in milliseconds" />
+    <ApiSchema name="state.position" type="number" description="Current track position in milliseconds" />
+    <ApiSchema name="state.connected" type="boolean" description="Whether player is connected to voice channel" />
+    <ApiSchema name="state.ping" type="number" description="Voice connection ping in milliseconds" />
+  </ApiSection>
+  <ApiSection title="Example">
+```json
+{
+  "op": "playerUpdate",
+  "guildId": "987654321098765432",
+  "state": {
+    "time": 1701350400000,
+    "position": 45230,
+    "connected": true,
+    "ping": 42
+  }
+}
+```
+  </ApiSection>
+</ApiCard>
+
+### Stats Event
+
+<ApiCard name="StatsEvent" method="EVENT" description="Server statistics sent every minute with system resource usage and playback metrics.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "stats"' />
+    <ApiSchema name="players" type="number" description="Total number of active players across all guilds" />
+    <ApiSchema name="playingPlayers" type="number" description="Number of players currently playing audio" />
+    <ApiSchema name="uptime" type="number" description="Server uptime in milliseconds since start" />
+    <ApiSchema name="memory" type="object" description="Memory usage information in bytes" />
+    <ApiSchema name="memory.free" type="number" description="Free system memory" />
+    <ApiSchema name="memory.used" type="number" description="Memory used by NodeLink process" />
+    <ApiSchema name="memory.allocated" type="number" description="Total allocated memory" />
+    <ApiSchema name="memory.reservable" type="number" description="Maximum reservable memory" />
+    <ApiSchema name="cpu" type="object" description="CPU usage information" />
+    <ApiSchema name="cpu.cores" type="number" description="Number of CPU cores" />
+    <ApiSchema name="cpu.systemLoad" type="number" description="System-wide CPU load (0.0-1.0)" />
+    <ApiSchema name="cpu.processLoad" type="number" description="NodeLink process CPU load (0.0-1.0)" />
+    <ApiSchema name="frameStats" type="object" description="Audio frame statistics (null if no active players)" />
+    <ApiSchema name="frameStats.sent" type="number" description="Total audio frames sent to Discord" />
+    <ApiSchema name="frameStats.nulled" type="number" description="Frames that were null/empty" />
+    <ApiSchema name="frameStats.deficit" type="number" description="Frames that failed to send" />
+  </ApiSection>
+  <ApiSection title="Example">
+```json
+{
+  "op": "stats",
+  "players": 5,
+  "playingPlayers": 3,
+  "uptime": 3600000,
+  "memory": {
+    "free": 4294967296,
+    "used": 536870912,
+    "allocated": 1073741824,
+    "reservable": 8589934592
+  },
+  "cpu": {
+    "cores": 8,
+    "systemLoad": 0.25,
+    "processLoad": 0.08
+  },
+  "frameStats": {
+    "sent": 15000,
+    "nulled": 0,
+    "deficit": 0
+  }
+}
+```
+  </ApiSection>
+</ApiCard>
+
+### Track Start Event
+
+<ApiCard name="TrackStartEvent" method="EVENT" description="Sent when a track begins playing on any player.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "TrackStartEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID where track started" />
+    <ApiSchema name="track" type="object" description="Full track information including encoded data" />
+    <ApiSchema name="track.encoded" type="string" description="Base64 encoded track data" />
+    <ApiSchema name="track.info" type="object" description="Track metadata" />
+  </ApiSection>
+  <ApiSection title="Example">
+```json
+{
+  "op": "event",
+  "type": "TrackStartEvent",
+  "guildId": "987654321098765432",
+  "track": {
+    "encoded": "QAAAjQIAJVJpY2sgQXN0bGV5IC0gTmV2ZXIgR29ubmEgR2l2ZSBZb3UgVXAADlJpY2tBc3RsZXlWRVZPAAAAAAACyPgAC2RRdzR3OVdnWGNRAAEAK2h0dHBzOi8vd3d3LnlvdXR1YmUuY29tL3dhdGNoP3Y9ZFF3NHc5V2dYY1EAB3lvdXR1YmUAAAAAAAAAAA==",
+    "info": {
+      "identifier": "dQw4w9WgXcQ",
+      "isSeekable": true,
+      "author": "Rick Astley",
+      "length": 212000,
+      "isStream": false,
+      "position": 0,
+      "title": "Never Gonna Give You Up",
+      "uri": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "artworkUrl": "https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+      "isrc": null,
+      "sourceName": "youtube"
+    }
+  }
+}
+```
+  </ApiSection>
+</ApiCard>
+
+### Track End Event
+
+<ApiCard name="TrackEndEvent" method="EVENT" description="Sent when a track finishes playing or is stopped for any reason.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "TrackEndEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID" />
+    <ApiSchema name="track" type="object" description="Track information" />
+    <ApiSchema name="reason" type="string" description="End reason: stopped, finished, loadFailed, replaced, cleanup" />
+  </ApiSection>
+  <ApiSection title="End Reasons">
+    <ApiSchema name="finished" type="string" description="Track completed normally" />
+    <ApiSchema name="stopped" type="string" description="Track was manually stopped" />
+    <ApiSchema name="replaced" type="string" description="Track was replaced by another track" />
+    <ApiSchema name="loadFailed" type="string" description="Track failed to load" />
+    <ApiSchema name="cleanup" type="string" description="Track ended due to cleanup (player destroyed)" />
+  </ApiSection>
+  <ApiSection title="Example">
+```json
+{
+  "op": "event",
+  "type": "TrackEndEvent",
+  "guildId": "987654321098765432",
+  "track": {
+    "encoded": "QAAAjQIAJVJpY2sgQXN0bGV5IC0gTmV2ZXIgR29ubmEgR2l2ZSBZb3UgVXAADlJpY2tBc3RsZXlWRVZPAAAAAAACyPgAC2RRdzR3OVdnWGNRAAEAK2h0dHBzOi8vd3d3LnlvdXR1YmUuY29tL3dhdGNoP3Y9ZFF3NHc5V2dYY1EAB3lvdXR1YmUAAAAAAAAAAA==",
+    "info": {
+      "identifier": "dQw4w9WgXcQ",
+      "title": "Never Gonna Give You Up",
+      "author": "Rick Astley",
+      "length": 212000,
+      "sourceName": "youtube"
+    }
+  },
+  "reason": "finished"
+}
+```
+  </ApiSection>
+</ApiCard>
+
+### Track Exception Event
+
+<ApiCard name="TrackExceptionEvent" method="EVENT" description="Sent when an error occurs during track playback.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "TrackExceptionEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID" />
+    <ApiSchema name="track" type="object" description="Track that caused the exception" />
+    <ApiSchema name="exception" type="object" description="Error details" />
+    <ApiSchema name="exception.message" type="string" description="Human-readable error message" />
+    <ApiSchema name="exception.severity" type="string" description="Error severity: common, suspicious, fault" />
+    <ApiSchema name="exception.cause" type="string" description="Root cause description" />
+  </ApiSection>
+  <ApiSection title="Severity Levels">
+    <ApiSchema name="common" type="string" description="Expected error (e.g., track unavailable)" />
+    <ApiSchema name="suspicious" type="string" description="Unusual but recoverable error" />
+    <ApiSchema name="fault" type="string" description="Critical error that prevents playback" />
+  </ApiSection>
+  <ApiSection title="Example">
+```json
+{
+  "op": "event",
+  "type": "TrackExceptionEvent",
+  "guildId": "987654321098765432",
+  "track": {
+    "encoded": "...",
+    "info": {
+      "identifier": "invalid123",
+      "title": "Invalid Track"
+    }
+  },
+  "exception": {
+    "message": "Failed to load track",
+    "severity": "fault",
+    "cause": "Video unavailable"
+  }
+}
+```
+  </ApiSection>
+</ApiCard>
+
+### Track Stuck Event
+
+<ApiCard name="TrackStuckEvent" method="EVENT" description="Sent when playback is stuck and hasn't progressed for the threshold period.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "TrackStuckEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID" />
+    <ApiSchema name="track" type="object" description="Track that is stuck" />
+    <ApiSchema name="thresholdMs" type="number" description="Time in milliseconds before considering stuck (typically 10000ms)" />
+  </ApiSection>
+  <ApiSection title="Example">
+```json
+{
+  "op": "event",
+  "type": "TrackStuckEvent",
+  "guildId": "987654321098765432",
+  "track": {
+    "encoded": "...",
+    "info": {
+      "identifier": "dQw4w9WgXcQ",
+      "title": "Never Gonna Give You Up"
+    }
+  },
+  "thresholdMs": 10000
+}
+```
+  </ApiSection>
+</ApiCard>
+
+### WebSocket Closed Event
+
+<ApiCard name="WebSocketClosedEvent" method="EVENT" description="Sent when the voice WebSocket connection to Discord closes.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "WebSocketClosedEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID" />
+    <ApiSchema name="code" type="number" description="Discord voice WebSocket close code" />
+    <ApiSchema name="reason" type="string" description="Human-readable close reason" />
+    <ApiSchema name="byRemote" type="boolean" description="Whether the close was initiated by Discord (true) or locally (false)" />
+  </ApiSection>
+  <ApiSection title="Common Discord Voice Close Codes">
+    <ApiSchema name="4014" type="number" description="Disconnected - channel was deleted or you were kicked" />
+    <ApiSchema name="4006" type="number" description="Session no longer valid" />
+    <ApiSchema name="4015" type="number" description="Voice server crashed" />
+  </ApiSection>
+  <ApiSection title="Example">
+```json
+{
+  "op": "event",
+  "type": "WebSocketClosedEvent",
+  "guildId": "987654321098765432",
+  "code": 4014,
+  "reason": "Disconnected",
+  "byRemote": true
+}
+```
+  </ApiSection>
+</ApiCard>
+
+### Player Lifecycle Events
+
+<ApiCard name="PlayerCreatedEvent" method="EVENT" description="Emitted when a new player is created for a guild.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "PlayerCreatedEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID" />
+  </ApiSection>
+  <ApiSection title="Example">
+```json
+{
+  "op": "event",
+  "type": "PlayerCreatedEvent",
+  "guildId": "987654321098765432"
+}
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="PlayerDestroyedEvent" method="EVENT" description="Emitted when a player is destroyed.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "PlayerDestroyedEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID" />
+  </ApiSection>
+  <ApiSection title="Example">
+```json
+{
+  "op": "event",
+  "type": "PlayerDestroyedEvent",
+  "guildId": "987654321098765432"
+}
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="PlayerConnectedEvent" method="EVENT" description="Emitted when player successfully connects to Discord voice channel.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "PlayerConnectedEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID" />
+  </ApiSection>
+  <ApiSection title="Example">
+```json
+{
+  "op": "event",
+  "type": "PlayerConnectedEvent",
+  "guildId": "987654321098765432"
+}
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="PlayerReconnectingEvent" method="EVENT" description="Emitted when player is attempting to reconnect to voice.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "PlayerReconnectingEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID" />
+  </ApiSection>
+  <ApiSection title="Example">
+```json
+{
+  "op": "event",
+  "type": "PlayerReconnectingEvent",
+  "guildId": "987654321098765432"
+}
+```
+  </ApiSection>
+</ApiCard>
+
+### Player State Events
+
+<ApiCard name="VolumeChangedEvent" method="EVENT" description="Emitted when player volume is changed.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "VolumeChangedEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID" />
+    <ApiSchema name="volume" type="number" description="New volume level (0-1000)" />
+  </ApiSection>
+  <ApiSection title="Example">
+```json
+{
+  "op": "event",
+  "type": "VolumeChangedEvent",
+  "guildId": "987654321098765432",
+  "volume": 80
+}
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="FiltersChangedEvent" method="EVENT" description="Emitted when audio filters are modified.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "FiltersChangedEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID" />
+    <ApiSchema name="filters" type="object" description="Active filter configuration" />
+  </ApiSection>
+  <ApiSection title="Example">
+```json
+{
+  "op": "event",
+  "type": "FiltersChangedEvent",
+  "guildId": "987654321098765432",
+  "filters": {
+    "volume": 1.0,
+    "equalizer": [
+      { "band": 0, "gain": 0.2 }
+    ]
+  }
+}
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="SeekEvent" method="EVENT" description="Emitted when seeking to a position in the track.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "SeekEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID" />
+    <ApiSchema name="position" type="number" description="New position in milliseconds" />
+  </ApiSection>
+  <ApiSection title="Example">
+```json
+{
+  "op": "event",
+  "type": "SeekEvent",
+  "guildId": "987654321098765432",
+  "position": 60000
+}
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="PauseEvent" method="EVENT" description="Emitted when playback is paused or resumed.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "PauseEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID" />
+    <ApiSchema name="paused" type="boolean" description="Whether playback is now paused (true) or resumed (false)" />
+  </ApiSection>
+  <ApiSection title="Example">
+```json
+{
+  "op": "event",
+  "type": "PauseEvent",
+  "guildId": "987654321098765432",
+  "paused": true
+}
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="ConnectionStatusEvent" method="EVENT" description="Emitted when voice connection status changes.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "ConnectionStatusEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID" />
+    <ApiSchema name="connected" type="boolean" description="Current connection status" />
+  </ApiSection>
+  <ApiSection title="Example">
+```json
+{
+  "op": "event",
+  "type": "ConnectionStatusEvent",
+  "guildId": "987654321098765432",
+  "connected": true
+}
+```
+  </ApiSection>
+</ApiCard>

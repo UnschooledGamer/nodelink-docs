@@ -1,0 +1,5 @@
+{
+  "title": "API Reference",
+  "description": "NodeLink API Documentation",
+  "pages": ["index", "websocket", "rest", "nodelink-features"]
+}
