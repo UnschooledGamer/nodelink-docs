@@ -222,29 +222,6 @@ curl -X GET "http://your-server.com/v4/encodetrack?track=%7B%22identifier%22%3A%
   </ApiSection>
 </ApiCard>
 
-<ApiCard name="EncodeTrack" method="GET" url="/v4/encodetrack" description="Encodes a track object into a base64 string.">
-  <ApiSection title="Query Parameters">
-    <ApiSchema name="track" type="object" required description="The track object to encode (URL encoded JSON)" />
-  </ApiSection>
-
-  <ApiSection title="Example Request">
-```bash
-curl -X GET "http://your-server.com/v4/encodetrack?track=%7B%22identifier%22%3A%22test%22%2C%22title%22%3A%22Test%20Track%22%2C%22author%22%3A%22Test%22%2C%22uri%22%3A%22https%3A%2F%2Fexample.com%2Ftest.mp3%22%2C%22sourceName%22%3A%22http%22%7D" \
-     -H "Authorization: yourPassword"
-```
-  </ApiSection>
-
-  <ApiSection title="Response">
-    <Accordions>
-      <Accordion title="Example Response">
-```json
-"BASE64_ENCODED_TRACK_STRING_HERE"
-```
-      </Accordion>
-    </Accordions>
-  </ApiSection>
-</ApiCard>
-
 <ApiCard name="EncodeTracks" method="POST" url="/v4/encodedtracks" description="Encodes multiple track objects into base64 strings at once.">
   <ApiSection title="Body">
 Array of track objects to encode, where each track has:
