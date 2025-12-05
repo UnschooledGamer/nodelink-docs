@@ -25,6 +25,16 @@ Production metrics that matter:
 
 ## Quick setup
 
+<Callout type="warn" title="⚠️ Optional Dependency Required">
+Prometheus metrics require the `prom-client` package to be installed:
+
+```bash
+npm install prom-client
+```
+
+Without this package, NodeLink will throw an error if metrics are enabled in your configuration. You can disable metrics by setting `metrics.enabled: false` in your config file.
+</Callout>
+
 <Steps>
 
 <Step>

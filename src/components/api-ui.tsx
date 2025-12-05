@@ -35,19 +35,30 @@ export function ApiCard({ children, className, name, method, url, description, e
             <div className="absolute inset-0 -z-10 bg-linear-to-br from-white/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100 dark:from-white/5 dark:to-transparent pointer-events-none" />
             
             <div className="p-4 border-b border-fd-border/50 bg-fd-card/20">
-                <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 overflow-hidden">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-4">
+                    <div className="flex items-center justify-between md:justify-start gap-3 md:overflow-hidden">
                         <h3 id={id} className="scroll-m-20 text-lg font-bold tracking-tight text-fd-foreground relative flex items-center gap-2 m-0 p-0 leading-none translate-y-[-10px]">
                             <a href={`#${id}`} className="not-prose focus:outline-none hover:text-fd-primary transition-colors truncate">
                                 {name}
                             </a>
                         </h3>
-                        {url && <div className="font-mono text-xs text-fd-primary bg-fd-primary/10 px-2.5 py-1 rounded-md border border-fd-primary/20 select-all whitespace-nowrap leading-none flex items-center min-h-[24px]">{url}</div>}
+                        {url && <div className="hidden md:flex font-mono text-xs text-fd-primary bg-fd-primary/10 px-2.5 py-1 rounded-md border border-fd-primary/20 select-all whitespace-nowrap leading-none items-center min-h-[24px]">{url}</div>}
+                        {method && (
+                            <span className={cn(
+                                "md:hidden px-2.5 py-1 rounded-md text-xs font-bold border shadow-sm tracking-wider uppercase whitespace-nowrap shrink-0 select-none flex items-center min-h-[24px] leading-none",
+                                method === "GET" && "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+                                method === "POST" && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+                                method === "DELETE" && "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
+                                method === "PATCH" && "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+                                method === "WS" && "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+                                method === "EVENT" && "bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20",
+                            )}>{method}</span>
+                        )}
                     </div>
                     
                     {method && (
                         <span className={cn(
-                            "px-2.5 py-1 rounded-md text-xs font-bold border shadow-sm tracking-wider uppercase whitespace-nowrap shrink-0 select-none flex items-center min-h-[24px] leading-none",
+                            "hidden md:flex px-2.5 py-1 rounded-md text-xs font-bold border shadow-sm tracking-wider uppercase whitespace-nowrap shrink-0 select-none items-center min-h-[24px] leading-none",
                             method === "GET" && "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
                             method === "POST" && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
                             method === "DELETE" && "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
@@ -56,6 +67,8 @@ export function ApiCard({ children, className, name, method, url, description, e
                             method === "EVENT" && "bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20",
                         )}>{method}</span>
                     )}
+                    
+                    {url && <div className="md:hidden font-mono text-xs text-fd-primary bg-fd-primary/10 px-2.5 py-1 rounded-md border border-fd-primary/20 select-all break-all leading-none flex items-center min-h-[24px] w-fit max-w-full">{url}</div>}
                 </div>
                 
                 {description && <div className="text-fd-muted-foreground text-sm leading-relaxed mt-2">{description}</div>}
