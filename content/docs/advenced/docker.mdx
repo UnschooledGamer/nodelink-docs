@@ -151,10 +151,10 @@ NODELINK_SOURCES_SPOTIFY_CLIENTID: "your_actual_spotify_client_id"
 NODELINK_SOURCES_SPOTIFY_CLIENTSECRET: "your_actual_spotify_client_secret"
 ```
 
-If you want better **YouTube support** (helps with age-restricted and some region-locked content), get a token from `cipher.kikkia.dev`:
+If you want better **YouTube support** (help with age-restricted content and some geographically restricted content), the default remote server is `cipher.kikkia.dev`:
 
 ```yaml
-NODELINK_SOURCES_YOUTUBE_CIPHER_TOKEN: "your_cipher_token"
+NODELINK_SOURCES_YOUTUBE_CIPHER_TOKEN: "your_cipher_token" #If you are using an internal or different server, you must provide the corresponding authorization for it.
 ```
 
 If you want to **use all your CPU cores** for better performance under load, enable cluster mode:
