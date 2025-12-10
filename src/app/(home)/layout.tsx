@@ -37,7 +37,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
               ]
             },
             {
-              type: 'menu',
+              type: 'main',
               text: 'Updates',
               url: '/blog',
               on: 'menu',
