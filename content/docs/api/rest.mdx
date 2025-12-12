@@ -55,6 +55,117 @@ The REST API allows you to manage sessions, players, and resolve audio tracks. A
   </ApiSection>
 </ApiCard>
 
+<ApiCard name="LoadType" description="Discriminator that determines the structure of the response 'data' field.">
+  <ApiSection title="Overview">
+    The `loadType` field tells you exactly what kind of result you received. You should always check this field first before attempting to parse the `data` object.
+  </ApiSection>
+
+  <ApiSection title="Enum Values">
+    <ApiSchema name="track" type="string" description="Loaded a single track. Data is a Track Object." />
+    <ApiSchema name="playlist" type="string" description="Loaded a playlist. Data is a Playlist Object." />
+    <ApiSchema name="search" type="string" description="Loaded search results. Data is an array of Track Objects." />
+    <ApiSchema name="empty" type="string" description="No results found. Data is empty." />
+    <ApiSchema name="error" type="string" description="Loading failed. Data is an Exception Object." />
+  </ApiSection>
+
+  <ApiSection title="Data Structures">
+    <Accordions>
+      <Accordion title="Playlist Info Object">
+        Metadata about the playlist found in `data.info`.
+        <ApiSchema name="name" type="string" required description="The name of the playlist." />
+        <ApiSchema name="selectedTrack" type="number" required description="The index of the selected track in the tracks array, or -1 if no track is selected." />
+      </Accordion>
+      <Accordion title="Exception Object">
+        Details about why the load failed, found in `data` when type is `error`.
+        <ApiSchema name="message" type="string" required description="A human-readable error message." />
+        <ApiSchema name="severity" type="string" required description="Severity level: 'common' (expected), 'suspicious' (unexpected but handled), 'fault' (system error)." />
+        <ApiSchema name="cause" type="string" required description="The root cause of the error." />
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+
+  <ApiSection title="Response Examples">
+    <Accordions>
+      <Accordion title="track">
+        Directly wraps a single [Track Object](#track-object).
+```json
+{
+  "loadType": "track",
+  "data": {
+    "encoded": "QAAAAAMARFJpY2sgQXN0bGV5...",
+    "info": {
+      "identifier": "dQw4w9WgXcQ",
+      "title": "Never Gonna Give You Up",
+      "author": "Rick Astley",
+      "length": 214000,
+      "isSeekable": true,
+      "isStream": false,
+      "uri": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "sourceName": "youtube"
+    },
+    "pluginInfo": {},
+    "userData": {}
+  }
+}
+```
+      </Accordion>
+      <Accordion title="playlist">
+        Contains playlist metadata and a list of tracks.
+```json
+{
+  "loadType": "playlist",
+  "data": {
+    "info": {
+      "name": "My Favorite Songs",
+      "selectedTrack": -1
+    },
+    "pluginInfo": {},
+    "tracks": [
+      { "encoded": "...", "info": { ... } },
+      { "encoded": "...", "info": { ... } }
+    ]
+  }
+}
+```
+      </Accordion>
+      <Accordion title="search">
+        Contains a list of tracks found by the query.
+```json
+{
+  "loadType": "search",
+  "data": [
+    { "encoded": "...", "info": { "title": "Result 1", ... } },
+    { "encoded": "...", "info": { "title": "Result 2", ... } }
+  ]
+}
+```
+      </Accordion>
+      <Accordion title="empty">
+        Indicates no matches were found for the identifier.
+```json
+{
+  "loadType": "empty",
+  "data": {}
+}
+```
+      </Accordion>
+      <Accordion title="error">
+        Indicates a failure during loading (e.g. Geo-blocked, Private).
+```json
+{
+  "loadType": "error",
+  "data": {
+    "message": "Video unavailable",
+    "severity": "common",
+    "cause": "The uploader has not made this video available in your country"
+  }
+}
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
 ## Tracks & Items
 
 <ApiCard name="LoadTracks" method="GET" url="/v4/loadtracks" description="Resolves audio tracks for use in playback. Supports direct URLs, search queries, and playlists.">
