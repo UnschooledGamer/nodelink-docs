@@ -30,7 +30,7 @@ export function HomeLayout(props: HomeLayoutProps & ComponentProps<'main'>) {
       id="nd-home-layout"
       {...rest}
       className={cn(
-        'flex flex-1 flex-col [--fd-layout-width:1400px]',
+        'flex flex-1 flex-col [--fd-layout-width:92%] xl:[--fd-layout-width:1200px] 2xl:[--fd-layout-width:1400px] 3xl:[--fd-layout-width:1600px] 4k:[--fd-layout-width:2000px]',
         rest.className,
       )}
     >
