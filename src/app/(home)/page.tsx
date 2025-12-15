@@ -5,7 +5,7 @@ import { Step, Steps } from '@/components/steps';
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col gap-16 py-8 px-4 md:px-8 max-w-5xl mx-auto text-fd-foreground overflow-x-hidden">
+    <div className="flex flex-col gap-16 py-8 px-4 md:px-8 w-full max-w-[90%] 2xl:max-w-[80%] 4k:max-w-[70%] mx-auto text-fd-foreground overflow-x-hidden transition-all duration-300">
       {/* Hero Section */}
       <section className="flex flex-col items-center text-center gap-6 pt-10">
         <div className="relative max-w-full">
@@ -18,14 +18,14 @@ export default function HomePage() {
           />
         </div>
 
-        <div className="space-y-4 max-w-2xl px-2">
-          <h1 className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-linear-to-b from-fd-primary to-fd-primary/60">
+        <div className="space-y-4 max-w-2xl 4k:max-w-4xl px-2">
+          <h1 className="text-4xl md:text-6xl 2xl:text-7xl 4k:text-9xl font-bold bg-clip-text text-transparent bg-linear-to-b from-fd-primary to-fd-primary/60">
             NodeLink
           </h1>
-          <p className="text-lg md:text-xl text-fd-foreground font-medium">
+          <p className="text-lg md:text-xl 2xl:text-2xl 4k:text-4xl text-fd-foreground font-medium">
             A modern Lavalink alternative built entirely in Node.js.
           </p>
-          <p className="text-sm md:text-base text-fd-muted-foreground">
+          <p className="text-sm md:text-base 2xl:text-lg 4k:text-2xl text-fd-muted-foreground">
             Lightweight, modular, and optimized for real-time performance. <br className="hidden md:inline" />
             It doesn’t try to reinvent the wheel — it just makes it spin with less weight. 🌿
           </p>
@@ -58,7 +58,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 auto-rows-[minmax(180px,auto)]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-[minmax(180px,auto)]">
           {/* Feature 1: The Core (Large) */}
           <div className="md:col-span-2 relative overflow-hidden rounded-2xl border border-fd-border bg-linear-to-br from-fd-card to-fd-background p-6 md:p-8 transition-all hover:shadow-lg hover:border-fd-primary/20 group">
             <div className="absolute top-0 right-0 p-8 opacity-10 font-black text-6xl md:text-9xl select-none pointer-events-none group-hover:opacity-20 transition-opacity">

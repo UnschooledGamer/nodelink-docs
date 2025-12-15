@@ -2,20 +2,138 @@
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
 
-/* Code block specific fixes - tight line spacing */
-pre code {
+@theme {
+  --breakpoint-3xl: 1920px;
+  --breakpoint-4k: 2560px;
+}
+
+:root {
+  --fd-layout-width: 95%;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 100%; /* Base 16px */
+}
+
+/* --- Font Size Scaling for TV/Large Screens --- */
+@media (min-width: 2000px) {
+  html { font-size: 110%; }
+}
+@media (min-width: 3000px) {
+  html { font-size: 130%; }
+}
+@media (min-width: 4000px) {
+  html { font-size: 150%; }
+}
+
+/* --- Code Blocks Fixes --- */
+pre code, .shiki code > span, .shiki pre, pre {
   line-height: 1.4 !important;
 }
 
-.shiki code > span {
-  line-height: 1.4 !important;
+/* --- Docs Layout Responsiveness --- */
+
+/* 1. Standard Desktop (1440px - 1919px) */
+@media (min-width: 1440px) {
+  #nd-docs-layout {
+    --fd-layout-width: 100% !important;
+    --fd-sidebar-width: 300px !important;
+    --fd-toc-width: 260px !important;
+    grid-template-columns: var(--fd-sidebar-width) 1fr var(--fd-toc-width) !important;
+  }
 }
 
-/* Remove extra spacing in code blocks */
-.shiki pre {
-  line-height: 1.4 !important;
+/* 2. Wide Screens (1920px+) 
+   - Sidebars stay fixed at edges (no auto margins on layout)
+   - Middle content expands
+*/
+@media (min-width: 1920px) {
+  #nd-docs-layout {
+    width: 100% !important;
+    max-width: none !important;
+    margin-inline: 0 !important;
+    border-inline: none !important;
+    
+    /* Slightly larger sidebars for 1080p+ */
+    --fd-sidebar-width: 320px !important;
+    --fd-toc-width: 280px !important;
+  }
+
+  /* Target the middle column content specifically */
+  #nd-docs-layout main {
+    width: 100% !important;
+    max-width: none !important; /* Remove generic limits */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center the internal containers */
+  }
+
+  /* The actual text content container */
+  #nd-docs-layout main > .fd-container,
+  #nd-docs-layout article {
+    width: 90% !important;
+    max-width: 1400px !important; /* Much wider than default */
+  }
 }
 
-pre {
-  line-height: 1.4 !important;
+/* 3. Ultra-Wide / 4K (2560px+) */
+@media (min-width: 2560px) {
+  #nd-docs-layout {
+    --fd-sidebar-width: 360px !important;
+    --fd-toc-width: 320px !important;
+  }
+
+  #nd-docs-layout main > .fd-container,
+  #nd-docs-layout article {
+    max-width: 1800px !important; /* Allow more width */
+  }
+}
+
+/* 4. Super-Ultra-Wide / 5K+ (3840px+) */
+@media (min-width: 3840px) {
+  #nd-docs-layout {
+    --fd-sidebar-width: 420px !important;
+    --fd-toc-width: 360px !important;
+  }
+
+  #nd-docs-layout main > .fd-container,
+  #nd-docs-layout article {
+    max-width: 2400px !important; /* Fill the screen for 8K */
+    width: 85% !important;
+  }
+}
+
+/* Sidebar adjustments for mid-sized laptops */
+@media (min-width: 1024px) and (max-width: 1439px) {
+  #nd-docs-layout {
+    --fd-sidebar-width: 240px !important;
+  }
+}
+
+/* --- Fine-tuning for Large Screens --- */
+@media (min-width: 2560px) {
+  /* Taller Navbar for 4K+ */
+  header#nd-nav {
+    height: 5rem !important; /* 80px */
+  }
+  header#nd-nav nav {
+    height: 5rem !important;
+  }
+
+  /* Spacier Sidebar Links */
+  #nd-sidebar a, #nd-sidebar button {
+    padding-block: 0.75rem !important; /* More vertical space */
+  }
+  
+  /* Better Line Height for reading at distance */
+  .prose p {
+    line-height: 1.8 !important;
+    margin-bottom: 1.5em !important;
+  }
+  
+  /* Add breathing room at bottom of page */
+  main {
+    padding-bottom: 10vh !important;
+  }
 }
