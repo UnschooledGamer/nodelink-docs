@@ -61,17 +61,68 @@ When calling `/v4/loadtracks`, you can use these prefixes to search specific sou
 | `ytsearch:` | YouTube | Standard video search |
 | `ytmsearch:` | YouTube Music | Music-only search |
 | `scsearch:` | SoundCloud | Track search |
+| `search:` | Unified | Search across `unifiedSearchSources` |
 | `spsearch:` | Spotify | Metadata search (mirrors to YouTube) |
 | `amsearch:` | Apple Music | Metadata search (mirrors to YouTube) |
 | `dzsearch:` | Deezer | Direct audio search |
 | `tdsearch:` | Tidal | Metadata search (mirrors to YouTube) |
 | `bcsearch:` | Bandcamp | Track search |
+| `admsearch:` | Audiomack | Track search |
+| `audiomack:` | Audiomack | Alias of `admsearch:` |
+| `gaanasearch:` | Gaana | Track search |
 | `jssearch:` | JioSaavn | Track search |
+| `lfsearch:` | Last.fm | Metadata search (mirrors to YouTube) |
 | `pdsearch:` | Pandora | Track search |
+| `vksearch:` | VK Music | Track search |
+| `mcsearch:` | Mixcloud | Track search |
 | `ncsearch:` | NicoVideo | Video search |
+| `nicovideo:` | NicoVideo | Alias of `ncsearch:` |
+| `bilibili:` | Bilibili | Video search |
+| `shsearch:` | Shazam | Metadata search (mirrors to YouTube) |
+| `szsearch:` | Shazam | Alias of `shsearch:` |
 | `gtts:` | Google TTS | Generate speech audio |
+| `speak:` | Google TTS | Alias of `gtts:` |
 | `ftts:` | Flowery TTS | Generate speech via Flowery API |
+| `flowery:` | Flowery TTS | Alias of `ftts:` |
 
 <Callout type="info">
   You can also pass direct URLs (e.g., `https://www.youtube.com/watch?v=...`) without any prefix.
+</Callout>
+
+## Search Type Modifiers
+
+Some sources accept a **type modifier** right after the prefix. This is not
+exclusive to YouTube; SoundCloud and other sources also parse type modifiers.
+The format is:
+
+`<prefix>:<type>:<query>`
+
+Supported types: `track` (default), `playlist`, `album`, `artist`, `channel`.
+
+Examples:
+
+- `ytsearch:playlist:billie eilish` (returns playlist results)
+- `ytmsearch:album:daft punk` (returns album results)
+- `scsearch:playlist:lofi beats` (returns SoundCloud playlists)
+- `scsearch:user:trap nation` (returns SoundCloud users)
+
+<Callout type="warn">
+  Playlist and channel search results are **not playable tracks**. Use the returned `info.uri` to call `/v4/loadtracks` and then play the resulting playlist tracks.
+</Callout>
+
+## Recommendation Prefixes
+
+Some sources can return recommended tracks when you use a `*rec` prefix.
+
+| Prefix | Source | Description |
+| :--- | :--- | :--- |
+| `ytrec:` | YouTube | Automix based on video id or search query |
+| `sprec:` | Spotify | Recommendations (pass `seed_tracks=...` or just a track id) |
+| `dzrec:` | Deezer | Recommendations by track id, or `artist=`/`track=` query |
+| `tdrec:` | Tidal | Recommendations by track id or search query |
+| `jsrec:` | JioSaavn | Recommendations by track id or search query |
+| `vkrec:` | VK Music | Recommendations (requires VK auth) |
+
+<Callout type="info">
+  Local files can be loaded by absolute path (e.g., `C:\music\track.mp3`) or with `local:` + a relative path from `sources.local.basePath`.
 </Callout>

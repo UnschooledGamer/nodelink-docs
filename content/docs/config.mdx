@@ -68,6 +68,10 @@ Settings related to worker clustering and auto-scaling behavior.
       type: 'number',
       default: '1'
     },
+    specializedSourceWorker: {
+      description: 'Dedicated worker pool for source loading (search, lyrics, etc.).',
+      type: 'object'
+    },
     commandTimeout: {
       description: 'Timeout (ms) for heavy operations like loadTracks.',
       type: 'number',
@@ -82,6 +86,63 @@ Settings related to worker clustering and auto-scaling behavior.
       description: 'Number of retry attempts on timeout or worker failure.',
       type: 'number',
       default: '2'
+    },
+    hibernation: {
+      description: 'Worker hibernation settings for idle periods.',
+      type: 'object'
+    },
+    endpoint: {
+      description: 'Controls the /v4/workers endpoint behavior.',
+      type: 'object'
+    }
+  }}
+/>
+
+### Specialized Source Workers
+
+<TypeTable
+  type={{
+    enabled: {
+      description: 'If true, source loading is delegated to dedicated workers.',
+      type: 'boolean',
+      default: 'true'
+    },
+    count: {
+      description: 'Number of separate process clusters for source operations.',
+      type: 'number',
+      default: '1'
+    },
+    microWorkers: {
+      description: 'Number of worker threads per source process cluster.',
+      type: 'number',
+      default: '2'
+    },
+    tasksPerWorker: {
+      description: 'Max parallel tasks each micro-worker can handle before queuing.',
+      type: 'number',
+      default: '32'
+    },
+    silentLogs: {
+      description: 'If true, micro-workers only log warnings and errors.',
+      type: 'boolean',
+      default: 'true'
+    }
+  }}
+/>
+
+### Hibernation
+
+<TypeTable
+  type={{
+    enabled: {
+      description: 'If true, idle workers enter efficiency mode to reduce CPU usage.',
+      type: 'boolean',
+      default: 'true'
+    },
+    timeoutMs: {
+      description: 'Idle time (ms) before a worker enters hibernation.',
+      type: 'number',
+      default: '1200000'
     }
   }}
 />
@@ -126,6 +187,93 @@ These settings control the `cluster.scaling` behavior.
       description: 'How many commands in queue per active worker trigger scale up.',
       type: 'number',
       default: '5'
+    },
+    lagPenaltyLimit: {
+      description: 'Event loop lag threshold (ms) that increases worker cost.',
+      type: 'number',
+      default: '60'
+    },
+    cpuPenaltyLimit: {
+      description: 'CPU usage threshold (0-1) that increases worker cost.',
+      type: 'number',
+      default: '0.85'
+    }
+  }}
+/>
+
+### Workers Endpoint
+
+<TypeTable
+  type={{
+    patchEnabled: {
+      description: 'If true, PATCH /v4/workers can terminate a worker.',
+      type: 'boolean',
+      default: 'true'
+    },
+    allowExternalPatch: {
+      description: 'If true, allows non-loopback clients to use PATCH /v4/workers.',
+      type: 'boolean',
+      default: 'false'
+    },
+    code: {
+      description: 'Shared secret required for PATCH /v4/workers.',
+      type: 'string',
+      default: '"CAPYBARA"'
+    }
+  }}
+/>
+
+---
+
+## Connection Health
+
+Monitors network health and connection quality for Discord voice.
+
+<TypeTable
+  type={{
+    'connection.logAllChecks': {
+      description: 'If true, logs every connection check result.',
+      type: 'boolean',
+      default: 'false'
+    },
+    'connection.interval': {
+      description: 'Interval (ms) between connection checks.',
+      type: 'number',
+      default: '300000'
+    },
+    'connection.timeout': {
+      description: 'Timeout (ms) for a single connection check.',
+      type: 'number',
+      default: '10000'
+    },
+    'connection.thresholds.bad': {
+      description: 'Mbps threshold for a bad connection.',
+      type: 'number',
+      default: '1'
+    },
+    'connection.thresholds.average': {
+      description: 'Mbps threshold for an average connection.',
+      type: 'number',
+      default: '5'
+    }
+  }}
+/>
+
+---
+
+## Limits
+
+<TypeTable
+  type={{
+    maxSearchResults: {
+      description: 'Max results returned by a single search.',
+      type: 'number',
+      default: '10'
+    },
+    maxAlbumPlaylistLength: {
+      description: 'Max tracks to load from albums/playlists when a hard cap is enforced.',
+      type: 'number',
+      default: '100'
     }
   }}
 />
@@ -158,6 +306,11 @@ Configuration for audio quality, updates, and playback behavior.
       type: 'number',
       default: '2000'
     },
+    statsUpdateInterval: {
+      description: 'How often worker stats are aggregated (ms).',
+      type: 'number',
+      default: '30000'
+    },
     trackStuckThresholdMs: {
       description: 'Time to wait before declaring a track stuck.',
       type: 'number',
@@ -178,6 +331,11 @@ Configuration for audio quality, updates, and playback behavior.
       type: 'boolean',
       default: 'false'
     },
+    enableLoadStreamEndpoint: {
+      description: 'Enables the /v4/loadstream endpoint (raw PCM stream).',
+      type: 'boolean',
+      default: 'false'
+    },
     resolveExternalLinks: {
       description: 'Automatically resolves external links (Spotify/Apple Music) in track metadata.',
       type: 'boolean',
@@ -193,6 +351,83 @@ Configuration for audio quality, updates, and playback behavior.
 
 ---
 
+## Filters
+
+Toggle built-in audio filters that can be used via the player filters API.
+
+<TypeTable
+  type={{
+    'filters.enabled.tremolo': { type: 'boolean', default: 'true' },
+    'filters.enabled.vibrato': { type: 'boolean', default: 'true' },
+    'filters.enabled.lowpass': { type: 'boolean', default: 'true' },
+    'filters.enabled.highpass': { type: 'boolean', default: 'true' },
+    'filters.enabled.rotation': { type: 'boolean', default: 'true' },
+    'filters.enabled.karaoke': { type: 'boolean', default: 'true' },
+    'filters.enabled.distortion': { type: 'boolean', default: 'true' },
+    'filters.enabled.channelMix': { type: 'boolean', default: 'true' },
+    'filters.enabled.equalizer': { type: 'boolean', default: 'true' },
+    'filters.enabled.chorus': { type: 'boolean', default: 'true' },
+    'filters.enabled.compressor': { type: 'boolean', default: 'true' },
+    'filters.enabled.echo': { type: 'boolean', default: 'true' },
+    'filters.enabled.phaser': { type: 'boolean', default: 'true' },
+    'filters.enabled.timescale': { type: 'boolean', default: 'true' }
+  }}
+/>
+
+---
+
+## Voice Receive
+
+Configuration for receiving Discord voice frames over a dedicated WebSocket.
+
+<TypeTable
+  type={{
+    'voiceReceive.enabled': {
+      description: 'If true, enables /v4/websocket/voice/:guildId streaming.',
+      type: 'boolean',
+      default: 'false'
+    },
+    'voiceReceive.format': {
+      description: 'Audio format for frames (opus or pcm_s16le).',
+      type: 'string',
+      default: '"opus"'
+    }
+  }}
+/>
+
+---
+
+## Audio Mixer
+
+Configuration for the built-in audio mixer (mix layers).
+
+<TypeTable
+  type={{
+    'mix.enabled': {
+      description: 'If true, enables mix endpoints and mixing logic.',
+      type: 'boolean',
+      default: 'true'
+    },
+    'mix.defaultVolume': {
+      description: 'Default volume for new mix layers.',
+      type: 'number',
+      default: '0.8'
+    },
+    'mix.maxLayersMix': {
+      description: 'Maximum number of simultaneous mix layers.',
+      type: 'number',
+      default: '5'
+    },
+    'mix.autoCleanup': {
+      description: 'If true, auto-removes mix layers when the main track ends.',
+      type: 'boolean',
+      default: 'true'
+    }
+  }}
+/>
+
+---
+
 ## Sources
 
 Configuration for specific music and media providers.
@@ -202,9 +437,9 @@ Configuration for specific music and media providers.
 <TypeTable
   type={{
     defaultSearchSource: {
-      description: 'The default source used when none is specified.',
-      type: 'string',
-      default: '"youtube"'
+      description: 'Default sources used when none is specified (fallback order).',
+      type: 'string[]',
+      default: '["youtube", "soundcloud"]'
     },
     unifiedSearchSources: {
       description: 'Sources included in unified search.',
@@ -219,6 +454,21 @@ Configuration for specific music and media providers.
 <TypeTable
   type={{
     enabled: { type: 'boolean', default: 'true' },
+    getOAuthToken: {
+      description: 'If true, enables OAuth token flow for YouTube clients.',
+      type: 'boolean',
+      default: 'false'
+    },
+    hl: {
+      description: 'YouTube language locale for requests.',
+      type: 'string',
+      default: '"en"'
+    },
+    gl: {
+      description: 'YouTube region locale for requests.',
+      type: 'string',
+      default: '"US"'
+    },
     allowItag: { 
       description: 'Additional itags for audio streams (e.g., [140, 141]).',
       type: 'number[]', 
@@ -239,10 +489,25 @@ Configuration for specific music and media providers.
       type: 'string[]',
       default: '["AndroidVR", "TV", "TVEmbedded", "IOS"]'
     },
+    'clients.resolve': {
+      description: 'Clients used for resolving rich metadata.',
+      type: 'string[]',
+      default: '["AndroidVR", "TV", "TVEmbedded", "IOS", "Web"]'
+    },
+    'clients.settings.TV.refreshToken': {
+      description: 'Refresh token(s) for the TV client; accepts a string or array for rotation.',
+      type: 'string | string[]',
+      default: '[""]'
+    },
     'cipher.url': {
       description: 'URL for the signature cipher service.',
       type: 'string',
-      default: '"http://127.0.0.1:8001"'
+      default: '"https://cipher.kikkia.dev/api"'
+    },
+    'cipher.token': {
+      description: 'Optional bearer token for the cipher service.',
+      type: 'string | null',
+      default: 'null'
     }
   }}
 />
@@ -254,6 +519,11 @@ Configuration for specific music and media providers.
     enabled: { type: 'boolean', default: 'true' },
     clientId: { type: 'string', default: '""' },
     clientSecret: { type: 'string', default: '""' },
+    externalAuthUrl: {
+      description: 'External token provider for auth (optional).',
+      type: 'string',
+      default: '"http://get.1lucas1apk.fun/spotify/gettoken"'
+    },
     market: { type: 'string', default: '"US"' },
     playlistLoadLimit: { 
       description: 'Pages to load (1 = 100 tracks). 0 for no limit.',
@@ -261,6 +531,12 @@ Configuration for specific music and media providers.
       default: '1' 
     },
     playlistPageLoadConcurrency: { type: 'number', default: '10' },
+    albumLoadLimit: {
+      description: 'Pages to load (1 = 50 tracks). 0 for no limit.',
+      type: 'number',
+      default: '1'
+    },
+    albumPageLoadConcurrency: { type: 'number', default: '5' },
     allowExplicit: { type: 'boolean', default: 'true' }
   }}
 />
@@ -275,7 +551,11 @@ Configuration for specific music and media providers.
       type: 'string', 
       default: '"token_here"' 
     },
+    market: { type: 'string', default: '"US"' },
     playlistLoadLimit: { type: 'number', default: '0' },
+    albumLoadLimit: { type: 'number', default: '0' },
+    playlistPageLoadConcurrency: { type: 'number', default: '5' },
+    albumPageLoadConcurrency: { type: 'number', default: '5' },
     allowExplicit: { type: 'boolean', default: 'true' }
   }}
 />
@@ -288,9 +568,15 @@ Configuration for specific music and media providers.
     token: { 
       description: 'Valid authentication token.',
       type: 'string', 
-      default: '""' 
+      default: '"token_here"' 
     },
-    countryCode: { type: 'string', default: '"US"' }
+    countryCode: { type: 'string', default: '"US"' },
+    playlistLoadLimit: {
+      description: 'Pages to load (1 = 50 tracks). 0 for no limit.',
+      type: 'number',
+      default: '2'
+    },
+    playlistPageLoadConcurrency: { type: 'number', default: '5' }
   }}
 />
 
@@ -298,11 +584,30 @@ Configuration for specific music and media providers.
 
 <TypeTable
   type={{
+    bandcamp: { description: 'Bandcamp source.', type: 'object' },
+    audiomack: { description: 'Audiomack source.', type: 'object' },
     deezer: { description: 'Enabled by default. Supports ARL/Decryption Key.', type: 'object' },
+    gaana: { description: 'Gaana source.', type: 'object' },
     jiosaavn: { description: 'Supports playlist/artist load limits.', type: 'object' },
-    pandora: { description: 'May require manual CSRF token due to region locks.', type: 'object' },
+    vkmusic: { description: 'VK Music source. Supports userToken/userCookie.', type: 'object' },
+    amazonmusic: { description: 'Amazon Music source.', type: 'object' },
+    mixcloud: { description: 'Mixcloud source.', type: 'object' },
+    nicovideo: { description: 'NicoVideo source.', type: 'object' },
+    telegram: { description: 'Telegram audio source.', type: 'object' },
+    bilibili: { description: 'Bilibili source (supports sessdata).', type: 'object' },
+    shazam: { description: 'Shazam source.', type: 'object' },
+    genius: { description: 'Genius source.', type: 'object' },
+    pinterest: { description: 'Pinterest source.', type: 'object' },
+    instagram: { description: 'Instagram source.', type: 'object' },
+    kwai: { description: 'Kwai source.', type: 'object' },
+    twitch: { description: 'Twitch source.', type: 'object' },
+    vimeo: { description: 'Vimeo source.', type: 'object' },
+    reddit: { description: 'Reddit source.', type: 'object' },
+    lastfm: { description: 'Last.fm source.', type: 'object' },
+    pandora: { description: 'May require manual CSRF token or remoteTokenUrl due to region locks.', type: 'object' },
     local: { description: 'Local file playback. Base path configurable.', type: 'object' },
-    http: { description: 'Direct HTTP stream playback.', type: 'boolean' },
+    http: { description: 'Direct HTTP stream playback.', type: 'object' },
+    soundcloud: { description: 'SoundCloud source (optional clientId).', type: 'object' },
     'google-tts': { 
       description: 'Google Text-to-Speech. Configurable language.', 
       type: 'object',
@@ -313,6 +618,153 @@ Configuration for specific music and media providers.
       type: 'object',
       default: '{ voice: "Salli", speed: 1.0 }'
     }
+  }}
+/>
+
+### VK Music
+
+<TypeTable
+  type={{
+    enabled: { type: 'boolean', default: 'true' },
+    userToken: {
+      description: 'Optional VK user token from web session.',
+      type: 'string',
+      default: '""'
+    },
+    userCookie: {
+      description: 'VK cookie header from web session (required if userToken is empty).',
+      type: 'string',
+      default: '""'
+    },
+    recommendationsLoadLimit: {
+      description: 'Max recommendation tracks to return.',
+      type: 'number',
+      default: '10'
+    }
+  }}
+/>
+
+### Bilibili
+
+<TypeTable
+  type={{
+    enabled: { type: 'boolean', default: 'true' },
+    sessdata: {
+      description: 'Optional sessdata cookie for premium/4k access.',
+      type: 'string',
+      default: '""'
+    }
+  }}
+/>
+
+### Pandora
+
+<TypeTable
+  type={{
+    enabled: { type: 'boolean', default: 'true' },
+    csrfToken: {
+      description: 'Optional CSRF token (US-only; manual fetch).',
+      type: 'string',
+      default: '""'
+    },
+    remoteTokenUrl: {
+      description: 'Remote token provider URL.',
+      type: 'string',
+      default: '"https://get.1lucas1apk.fun/pandora/gettoken"'
+    }
+  }}
+/>
+
+### SoundCloud
+
+<TypeTable
+  type={{
+    enabled: { type: 'boolean', default: 'true' },
+    clientId: {
+      description: 'Optional SoundCloud client id.',
+      type: 'string',
+      default: '""'
+    }
+  }}
+/>
+
+### Local Files
+
+<TypeTable
+  type={{
+    enabled: { type: 'boolean', default: 'true' },
+    basePath: {
+      description: 'Base directory for local: paths.',
+      type: 'string',
+      default: '"./local-music/"'
+    }
+  }}
+/>
+
+### Deezer
+
+<TypeTable
+  type={{
+    enabled: { type: 'boolean', default: 'true' },
+    arl: {
+      description: 'Optional Deezer ARL cookie.',
+      type: 'string',
+      default: '""'
+    },
+    decryptionKey: {
+      description: 'Optional decryption key for high-quality streams.',
+      type: 'string',
+      default: '""'
+    }
+  }}
+/>
+
+### JioSaavn
+
+<TypeTable
+  type={{
+    enabled: { type: 'boolean', default: 'true' },
+    playlistLoadLimit: {
+      description: 'Max playlist tracks to load.',
+      type: 'number',
+      default: '50'
+    },
+    artistLoadLimit: {
+      description: 'Max artist tracks to load.',
+      type: 'number',
+      default: '20'
+    },
+    secretKey: {
+      description: 'Optional secret key override.',
+      type: 'string',
+      default: '""'
+    }
+  }}
+/>
+
+### Google TTS
+
+<TypeTable
+  type={{
+    enabled: { type: 'boolean', default: 'true' },
+    language: {
+      description: 'Language tag for TTS.',
+      type: 'string',
+      default: '"en-US"'
+    }
+  }}
+/>
+
+### Flowery TTS
+
+<TypeTable
+  type={{
+    enabled: { type: 'boolean', default: 'true' },
+    voice: { type: 'string', default: '"Salli"' },
+    translate: { type: 'boolean', default: 'false' },
+    silence: { type: 'number', default: '0' },
+    speed: { type: 'number', default: '1.0' },
+    enforceConfig: { type: 'boolean', default: 'false' }
   }}
 />
 
@@ -329,6 +781,17 @@ Configuration for lyrics providers.
       type: 'string',
       default: '"genius"'
     },
+    'youtube.enabled': { type: 'boolean', default: 'true' },
+    'genius.enabled': { type: 'boolean', default: 'true' },
+    'musixmatch.enabled': { type: 'boolean', default: 'true' },
+    'musixmatch.signatureSecret': {
+      description: 'Optional signature secret override.',
+      type: 'string',
+      default: '""'
+    },
+    'lrclib.enabled': { type: 'boolean', default: 'true' },
+    'bilibili.enabled': { type: 'boolean', default: 'true' },
+    'applemusic.enabled': { type: 'boolean', default: 'true' },
     'applemusic.advanceSearch': {
       description: 'Uses YTMusic to match title/artist for better accuracy.',
       type: 'boolean',
@@ -337,7 +800,7 @@ Configuration for lyrics providers.
   }}
 />
 
-**Supported Providers:** YouTube, Genius, Musixmatch, LRCLib, Apple Music.
+**Supported Providers:** YouTube, Genius, Musixmatch, LRCLib, Apple Music, Bilibili.
 
 ---
 
@@ -350,7 +813,11 @@ Configuration for lyrics providers.
     enabled: { type: 'boolean', default: 'true' },
     'thresholds.burstRequests': { type: 'number', default: '50' },
     'thresholds.timeWindowMs': { type: 'number', default: '10000' },
-    'mitigation.blockDurationMs': { type: 'number', default: '300000' }
+    'mitigation.delayMs': { type: 'number', default: '500' },
+    'mitigation.blockDurationMs': { type: 'number', default: '300000' },
+    'ignore.userIds': { type: 'string[]', default: '[]' },
+    'ignore.guildIds': { type: 'string[]', default: '[]' },
+    'ignore.ips': { type: 'string[]', default: '[]' }
   }}
 />
 
@@ -360,9 +827,17 @@ Configuration for lyrics providers.
   type={{
     enabled: { type: 'boolean', default: 'true' },
     'global.maxRequests': { type: 'number', default: '1000' },
+    'global.timeWindowMs': { type: 'number', default: '60000' },
     'perIp.maxRequests': { type: 'number', default: '100' },
+    'perIp.timeWindowMs': { type: 'number', default: '10000' },
     'perUserId.maxRequests': { type: 'number', default: '50' },
-    'perGuildId.maxRequests': { type: 'number', default: '20' }
+    'perUserId.timeWindowMs': { type: 'number', default: '5000' },
+    'perGuildId.maxRequests': { type: 'number', default: '20' },
+    'perGuildId.timeWindowMs': { type: 'number', default: '5000' },
+    ignorePaths: { type: 'string[]', default: '[]' },
+    'ignore.userIds': { type: 'string[]', default: '[]' },
+    'ignore.guildIds': { type: 'string[]', default: '[]' },
+    'ignore.ips': { type: 'string[]', default: '[]' }
   }}
 />
 
@@ -388,8 +863,6 @@ Configuration for lyrics providers.
   }}
 />
 
----
-
 ## Logging & Metrics
 
 <TypeTable
@@ -402,13 +875,43 @@ Configuration for lyrics providers.
       type: 'boolean',
       default: 'false'
     },
-    'metrics.enabled': {
+    'logging.file.path': {
+      type: 'string',
+      default: '"logs"'
+    },
+    'logging.file.rotation': {
+      type: 'string',
+      default: '"daily"'
+    },
+    'logging.file.ttlDays': {
+      type: 'number',
+      default: '7'
+    },
+    'logging.debug.all': {
+      description: 'If true, enables all debug categories.',
       type: 'boolean',
       default: 'false'
+    },
+    'logging.debug.request': { type: 'boolean', default: 'true' },
+    'logging.debug.session': { type: 'boolean', default: 'true' },
+    'logging.debug.player': { type: 'boolean', default: 'true' },
+    'logging.debug.filters': { type: 'boolean', default: 'true' },
+    'logging.debug.sources': { type: 'boolean', default: 'true' },
+    'logging.debug.lyrics': { type: 'boolean', default: 'true' },
+    'logging.debug.youtube': { type: 'boolean', default: 'true' },
+    'logging.debug.youtube-cipher': { type: 'boolean', default: 'true' },
+    'metrics.enabled': {
+      type: 'boolean',
+      default: 'true'
     },
     'metrics.authorization.type': {
       type: 'string',
       default: '"Bearer"'
+    },
+    'metrics.authorization.password': {
+      description: 'If empty, falls back to server.password.',
+      type: 'string',
+      default: '""'
     }
   }}
 />
@@ -424,7 +927,7 @@ Configuration for loading and managing plugins.
     plugins: {
       description: 'List of plugins to load.',
       type: 'array',
-      default: '[{ name: "nodelink-sample-plugin", source: "local" }]'
+      default: '[]'
     },
     pluginConfig: {
       description: 'Configuration object for specific plugins.',
@@ -433,4 +936,3 @@ Configuration for loading and managing plugins.
     }
   }}
 />
-

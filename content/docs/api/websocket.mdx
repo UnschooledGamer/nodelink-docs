@@ -74,7 +74,7 @@ NodeLink sends various events to keep clients informed about playback status, pl
 
 ### Player Update
 
-<ApiCard name="PlayerUpdate" method="EVENT" description="Sent periodically (every 5 seconds) with current playback position and connection status for each active player.">
+<ApiCard name="PlayerUpdate" method="EVENT" description="Sent periodically (default 2s, configurable via playerUpdateInterval) with current playback position and connection status for each active player.">
   <ApiSection title="Payload Structure">
     <ApiSchema name="op" type="string" description='Always "playerUpdate"' />
     <ApiSchema name="guildId" type="string" description="Discord guild ID where player is active" />
@@ -102,7 +102,7 @@ NodeLink sends various events to keep clients informed about playback status, pl
 
 ### Stats Event
 
-<ApiCard name="StatsEvent" method="EVENT" description="Server statistics sent every minute with system resource usage and playback metrics.">
+<ApiCard name="StatsEvent" method="EVENT" description="Server statistics sent on the statsUpdateInterval (default 30s).">
   <ApiSection title="Payload Structure">
     <ApiSchema name="op" type="string" description='Always "stats"' />
     <ApiSchema name="players" type="number" description="Total number of active players across all guilds" />
@@ -121,6 +121,7 @@ NodeLink sends various events to keep clients informed about playback status, pl
     <ApiSchema name="frameStats.sent" type="number" description="Total audio frames sent to Discord" />
     <ApiSchema name="frameStats.nulled" type="number" description="Frames that were null/empty" />
     <ApiSchema name="frameStats.deficit" type="number" description="Frames that failed to send" />
+    <ApiSchema name="frameStats.expected" type="number" description="Total expected frames" />
   </ApiSection>
   <ApiSection title="Example">
 ```json
@@ -143,7 +144,8 @@ NodeLink sends various events to keep clients informed about playback status, pl
   "frameStats": {
     "sent": 15000,
     "nulled": 0,
-    "deficit": 0
+    "deficit": 0,
+    "expected": 15000
   }
 }
 ```
@@ -160,6 +162,7 @@ NodeLink sends various events to keep clients informed about playback status, pl
     <ApiSchema name="track" type="object" description="Full track information including encoded data" />
     <ApiSchema name="track.encoded" type="string" description="Base64 encoded track data" />
     <ApiSchema name="track.info" type="object" description="Track metadata" />
+    <ApiSchema name="playingQuality" type="number | null" description="YouTube itag or null if unavailable." />
   </ApiSection>
   <ApiSection title="Example">
 ```json
@@ -182,7 +185,8 @@ NodeLink sends various events to keep clients informed about playback status, pl
       "isrc": null,
       "sourceName": "youtube"
     }
-  }
+  },
+  "playingQuality": 251
 }
 ```
   </ApiSection>
@@ -277,6 +281,7 @@ NodeLink sends various events to keep clients informed about playback status, pl
     <ApiSchema name="guildId" type="string" description="Discord guild ID" />
     <ApiSchema name="track" type="object" description="Track that is stuck" />
     <ApiSchema name="thresholdMs" type="number" description="Time in milliseconds before considering stuck (typically 10000ms)" />
+    <ApiSchema name="reason" type="string" description="Why the track was marked as stuck." />
   </ApiSection>
   <ApiSection title="Example">
 ```json
@@ -291,7 +296,8 @@ NodeLink sends various events to keep clients informed about playback status, pl
       "title": "Never Gonna Give You Up"
     }
   },
-  "thresholdMs": 10000
+  "thresholdMs": 10000,
+  "reason": "Recovery attempt failed"
 }
 ```
   </ApiSection>
@@ -327,6 +333,25 @@ NodeLink sends various events to keep clients informed about playback status, pl
   </ApiSection>
 </ApiCard>
 
+<ApiCard name="WorkerFailedEvent" method="EVENT" description="Emitted when a cluster worker fails and affected players are dropped.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "WorkerFailedEvent"' />
+    <ApiSchema name="affectedGuilds" type="string[]" description="Guild IDs impacted by the worker failure." />
+    <ApiSchema name="message" type="string" description="Human-readable summary." />
+  </ApiSection>
+  <ApiSection title="Example">
+```json
+{
+  "op": "event",
+  "type": "WorkerFailedEvent",
+  "affectedGuilds": ["987654321098765432"],
+  "message": "Players for guilds 987654321098765432 lost due to worker failure."
+}
+```
+  </ApiSection>
+</ApiCard>
+
 ### Player Lifecycle Events
 
 <ApiCard name="PlayerCreatedEvent" method="EVENT" description="Emitted when a new player is created for a guild.">
@@ -334,13 +359,20 @@ NodeLink sends various events to keep clients informed about playback status, pl
     <ApiSchema name="op" type="string" description='Always "event"' />
     <ApiSchema name="type" type="string" description='Always "PlayerCreatedEvent"' />
     <ApiSchema name="guildId" type="string" description="Discord guild ID" />
+    <ApiSchema name="player" type="object" description="Player state snapshot." />
   </ApiSection>
   <ApiSection title="Example">
 ```json
 {
   "op": "event",
   "type": "PlayerCreatedEvent",
-  "guildId": "987654321098765432"
+  "guildId": "987654321098765432",
+  "player": {
+    "guildId": "987654321098765432",
+    "track": null,
+    "paused": false,
+    "volume": 100
+  }
 }
 ```
   </ApiSection>
@@ -368,13 +400,20 @@ NodeLink sends various events to keep clients informed about playback status, pl
     <ApiSchema name="op" type="string" description='Always "event"' />
     <ApiSchema name="type" type="string" description='Always "PlayerConnectedEvent"' />
     <ApiSchema name="guildId" type="string" description="Discord guild ID" />
+    <ApiSchema name="voice" type="object" description="Voice connection details." />
   </ApiSection>
   <ApiSection title="Example">
 ```json
 {
   "op": "event",
   "type": "PlayerConnectedEvent",
-  "guildId": "987654321098765432"
+  "guildId": "987654321098765432",
+  "voice": {
+    "sessionId": "abc",
+    "token": "token",
+    "endpoint": "us-central123.discord.media",
+    "channelId": "123456789012345678"
+  }
 }
 ```
   </ApiSection>
@@ -385,13 +424,20 @@ NodeLink sends various events to keep clients informed about playback status, pl
     <ApiSchema name="op" type="string" description='Always "event"' />
     <ApiSchema name="type" type="string" description='Always "PlayerReconnectingEvent"' />
     <ApiSchema name="guildId" type="string" description="Discord guild ID" />
+    <ApiSchema name="voice" type="object" description="Voice connection details." />
   </ApiSection>
   <ApiSection title="Example">
 ```json
 {
   "op": "event",
   "type": "PlayerReconnectingEvent",
-  "guildId": "987654321098765432"
+  "guildId": "987654321098765432",
+  "voice": {
+    "sessionId": "abc",
+    "token": "token",
+    "endpoint": "us-central123.discord.media",
+    "channelId": "123456789012345678"
+  }
 }
 ```
   </ApiSection>
@@ -484,16 +530,21 @@ NodeLink sends various events to keep clients informed about playback status, pl
   <ApiSection title="Payload Structure">
     <ApiSchema name="op" type="string" description='Always "event"' />
     <ApiSchema name="type" type="string" description='Always "ConnectionStatusEvent"' />
-    <ApiSchema name="guildId" type="string" description="Discord guild ID" />
-    <ApiSchema name="connected" type="boolean" description="Current connection status" />
+    <ApiSchema name="status" type="string" description="Connection status (connected, unstable, disconnected)." />
+    <ApiSchema name="metrics" type="object | null" description="Connection metrics payload (speed, latency, error, timestamp)." />
   </ApiSection>
   <ApiSection title="Example">
 ```json
 {
   "op": "event",
   "type": "ConnectionStatusEvent",
-  "guildId": "987654321098765432",
-  "connected": true
+  "status": "connected",
+  "metrics": {
+    "speed": {
+      "mbps": 180.59
+    },
+    "timestamp": 1764813556344
+  }
 }
 ```
   </ApiSection>

@@ -1,0 +1,219 @@
+---
+title: Voice Receive (Relay)
+description: Stream Discord voice frames back to your client over a dedicated WebSocket.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+
+# Voice Receive (Relay)
+
+Voice Receive lets NodeLink forward voice data from Discord back to your application. It is designed for recording, speech analysis, live transcription, or custom mixers.
+
+<Callout type="warn" title="Experimental feature">
+  Voice Receive is still evolving. Expect format changes and handle reconnects defensively.
+</Callout>
+
+## How it works
+
+1. NodeLink joins a Discord voice channel through a normal player connection.
+2. When users speak, NodeLink captures their voice frames.
+3. Frames are forwarded to a dedicated WebSocket: `/v4/websocket/voice/:guildId`.
+
+Each frame is binary and contains metadata plus either Opus packets or raw PCM audio.
+
+---
+
+## Enable Voice Receive
+
+<Steps>
+
+<Step>
+
+### 1) Turn it on in config
+
+```json
+"voiceReceive": {
+  "enabled": true,
+  "format": "opus" // or "pcm_s16le"
+}
+```
+
+</Step>
+
+<Step>
+
+### 2) Make your bot join voice
+
+Voice Receive only streams when NodeLink is connected to the guild voice channel. Use your Lavalink client as usual to connect and play or idle.
+
+</Step>
+
+<Step>
+
+### 3) Connect to the voice WebSocket
+
+Connect using the same password and Client-Name headers as the main WebSocket, plus the bot User-Id.
+
+</Step>
+
+</Steps>
+
+---
+
+## WebSocket endpoint and headers
+
+Endpoint:
+
+```
+ws://HOST:PORT/v4/websocket/voice/:guildId
+```
+
+Required headers:
+
+- `Authorization`: NodeLink password.
+- `Client-Name`: your client name (for example `my-bot/1.0.0`).
+- `User-Id`: your Discord bot user id.
+- `Session-Id`: optional, same semantics as the main WebSocket.
+
+If `voiceReceive.enabled` is false, the server returns 404 or closes with code 1008.
+
+---
+
+## Binary frame format
+
+All frames follow the same layout:
+
+| Field | Size | Description |
+| --- | --- | --- |
+| op | 1 byte | 1 = start, 2 = stop, 3 = data |
+| format | 1 byte | 0 = opus, 2 = pcm_s16le |
+| guildIdLen | 1 byte | Length of the guild id string |
+| guildId | variable | UTF-8 guild id |
+| userIdLen | 1 byte | Length of the user id string |
+| userId | variable | UTF-8 user id |
+| ssrc | 4 bytes | Unsigned int, big-endian |
+| timestamp | 4 bytes | Unsigned int, big-endian (ms) |
+| payload | variable | Opus packet or PCM chunk |
+
+Start and stop frames have an empty payload. Data frames carry the audio payload.
+
+### Format notes
+
+- `opus`: raw Discord Opus packets, not wrapped in Ogg.
+- `pcm_s16le`: 48 kHz, 16-bit signed little-endian, stereo, interleaved.
+- Only `opus` and `pcm_s16le` are supported. Other values fall back to `opus`.
+
+---
+
+## Parsing example (Node.js)
+
+```js
+const VOICE_OPS = { start: 1, stop: 2, data: 3 };
+
+function parseVoiceFrame(buffer) {
+  let offset = 0;
+  const op = buffer.readUInt8(offset++);
+  const format = buffer.readUInt8(offset++);
+
+  const guildLen = buffer.readUInt8(offset++);
+  const guildId = buffer.toString("utf8", offset, offset + guildLen);
+  offset += guildLen;
+
+  const userLen = buffer.readUInt8(offset++);
+  const userId = buffer.toString("utf8", offset, offset + userLen);
+  offset += userLen;
+
+  const ssrc = buffer.readUInt32BE(offset);
+  offset += 4;
+
+  const timestamp = buffer.readUInt32BE(offset);
+  offset += 4;
+
+  return {
+    op,
+    format,
+    guildId,
+    userId,
+    ssrc,
+    timestamp,
+    payload: buffer.subarray(offset)
+  };
+}
+```
+
+---
+
+## Using it in a bot
+
+This example opens a second WebSocket connection to receive voice frames while your Lavalink client handles the normal player lifecycle.
+
+```js
+import WebSocket from "ws";
+
+const guildId = "123456789012345678";
+const ws = new WebSocket(`ws://localhost:3000/v4/websocket/voice/${guildId}`, {
+  headers: {
+    Authorization: process.env.NODELINK_PASSWORD,
+    "Client-Name": "my-bot/1.0.0",
+    "User-Id": process.env.BOT_USER_ID
+  }
+});
+
+ws.on("message", (data) => {
+  const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data);
+  const frame = parseVoiceFrame(buffer);
+
+  if (frame.op === VOICE_OPS.data) {
+    // Write PCM or Opus payloads to your pipeline here.
+  }
+});
+```
+
+Make sure your bot has already created a player and joined voice in the same guild. Without an active voice connection, no frames are emitted.
+
+---
+
+## Using it from a separate client
+
+You can also connect from a standalone service for analysis or storage:
+
+1. Your bot joins voice (normal Lavalink workflow).
+2. A separate service connects to `/v4/websocket/voice/:guildId` using the same auth headers and bot User-Id.
+3. The service receives frames and handles storage or processing.
+
+This keeps your bot lightweight while a specialized service does the heavy audio work.
+
+---
+
+## Handling the audio payloads
+
+### Opus payloads
+
+Opus is the most efficient option for storage and bandwidth. If you need to play or process the data, decode Opus packets with a library and write the PCM stream to your pipeline. If you want files you can replay later, wrap packets into a proper Ogg Opus container first.
+
+### PCM payloads
+
+PCM is best for analysis, speech recognition, or mixing.
+
+```
+ffmpeg -f s16le -ar 48000 -ac 2 -i input.pcm output.wav
+```
+
+---
+
+## Recommended libraries and sources
+
+| Language | WebSocket | Opus decode | PCM utilities |
+| --- | --- | --- | --- |
+| Node.js | `ws` | `@discordjs/opus`, `opusscript`, `prism-media` | `wav`, `speaker`, `ffmpeg` |
+| Python | `websockets` | `opuslib`, `pyogg` | `wave`, `pydub`, `ffmpeg` |
+| Go | `gorilla/websocket` | `hraban/opus` | `go-audio/wav` |
+| Rust | `tokio-tungstenite` | `opus` crate | `hound` |
+
+Recommended approach:
+
+- Use `opus` when you want small files or low CPU.
+- Use `pcm_s16le` for analysis, transcription, or DSP.
+
+---

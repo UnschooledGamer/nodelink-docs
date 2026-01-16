@@ -176,7 +176,33 @@ curl -X GET "http://your-server.com/v4/loadtracks?identifier=ytsearch:never%20go
 ```
   </ApiSection>
   <ApiSection title="Query Parameters">
-    <ApiSchema name="identifier" type="string" required description="URL, search query (prefix: ytsearch:, spsearch:, scsearch:), or playlist URL" />
+    <ApiSchema name="identifier" type="string" required description="URL, search query (prefix: ytsearch:, spsearch:, scsearch:, search:), playlist URL, or local path. Some prefixes accept a type modifier like :playlist: or :album:." />
+  </ApiSection>
+  <ApiSection title="Identifier Notes">
+    <Accordions>
+      <Accordion title="Unified Search">
+        Use `search:query` to search across `unifiedSearchSources`.
+      </Accordion>
+      <Accordion title="Search Type Modifiers">
+        Use `<prefix>:<type>:<query>` to filter the result kind (where supported).
+
+        - Types: `track` (default), `playlist`, `album`, `artist`, `channel`
+        - Example: `ytsearch:playlist:billie eilish`
+      </Accordion>
+      <Accordion title="Playlist and Channel Results">
+        Some searches (e.g., `ytsearch:playlist:...`) return **playlist/channel entries**, not playable tracks. These items include `pluginInfo.type` like `playlist_result` or `channel_result`.  
+        To play them, call `/v4/loadtracks` again using the returned `info.uri` (for playlists) and queue the resulting tracks.
+      </Accordion>
+      <Accordion title="Recommendations">
+        Use `*rec` prefixes to fetch recommendations (e.g., `ytrec:videoId`, `sprec:seed_tracks=...`).
+      </Accordion>
+      <Accordion title="Local Files">
+        You can pass an absolute path (e.g., `C:\music\track.mp3`) or `local:relative/path.mp3` (resolved against `sources.local.basePath`).
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+  <ApiSection title="Notes">
+    `frameStats` includes `expected` (total expected frames) and `deficit` when players are active.
   </ApiSection>
   <ApiSection title="Response">
     <Accordions>
@@ -844,6 +870,80 @@ curl -X GET "http://your-server.com/v4/stats" \
   </ApiSection>
 </ApiCard>
 
+<ApiCard name="GetMetrics" method="GET" url="/v4/metrics" description="Returns Prometheus metrics (if enabled).">
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/v4/metrics" \
+     -H "Authorization: Bearer yourPassword"
+```
+  </ApiSection>
+  <ApiSection title="Notes">
+    This endpoint is protected by `metrics.authorization.type` and `metrics.authorization.password`.  
+    If `metrics.authorization.password` is empty, the server uses `server.password`.
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="GetWorkers" method="GET" url="/v4/workers" description="Returns worker metrics when cluster mode is enabled.">
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/v4/workers" \
+     -H "Authorization: yourPassword"
+```
+  </ApiSection>
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="Example Response">
+```json
+[
+  {
+    "id": 1,
+    "clusterId": 1,
+    "pid": 24560,
+    "stats": {
+      "players": 0,
+      "playingPlayers": 0
+    },
+    "health": true,
+    "uptime": 120
+  }
+]
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="PatchWorker" method="PATCH" url="/v4/workers" description="Terminates a worker process by id, clusterId, or pid.">
+  <ApiSection title="Body">
+    <ApiSchema name="code" type="string" required description="Patch code configured in cluster.endpoint.code." />
+    <ApiSchema name="id" type="number" description="Worker unique id returned by GET /v4/workers." />
+    <ApiSchema name="clusterId" type="number" description="Cluster worker id." />
+    <ApiSchema name="pid" type="number" description="Worker process id." />
+  </ApiSection>
+  <ApiSection title="Example Request">
+```bash
+curl -X PATCH "http://your-server.com/v4/workers" \
+     -H "Authorization: yourPassword" \
+     -H "Content-Type: application/json" \
+     -d '{"code": "CAPYBARA", "id": 1}'
+```
+  </ApiSection>
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="Success">
+```json
+{
+  "killed": true,
+  "id": 1,
+  "clusterId": 1,
+  "pid": 24560
+}
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
 <ApiCard name="GetVersion" method="GET" url="/version" description="Returns the plain text version of NodeLink. Note: This endpoint is at /version (not /v4/version) for Lavalink client compatibility.">
   <ApiSection title="Example Request">
 ```bash
@@ -1055,6 +1155,44 @@ curl -X GET "http://your-server.com/v4/trackstream?encodedTrack=QAAAAAMAM0hvdyB0
   ]
 }
 ```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="LoadStream" isNew method="GET / POST" url="/v4/loadstream" description="Streams raw PCM audio for a track (if enabled).">
+  <ApiSection title="Configuration">
+    Requires `enableLoadStreamEndpoint: true` in `config.js`.
+  </ApiSection>
+  <ApiSection title="Query / Body Parameters">
+    <ApiSchema name="encodedTrack" type="string" required description="Base64 encoded track string." />
+    <ApiSchema name="volume" type="number" description="Volume 0 to 1000 (default: 100)." />
+    <ApiSchema name="position" type="number" description="Start position in milliseconds." />
+    <ApiSchema name="t" type="number" description="Alias of position (milliseconds)." />
+    <ApiSchema name="filters" type="object | string" description="JSON filters object (query can be JSON string)." />
+  </ApiSection>
+  <ApiSection title="Example Request (GET)">
+
+```bash
+curl -X GET "http://your-server.com/v4/loadstream?encodedTrack=QAAAAAMAM0hvdyB0byBBZGQgQ2hhcHRlcnMgdG8gWW91ciBWaWRlb3MgVXNpbmcgVGltZXN0YW1wcwAQWW91VHViZSBDcmVhdG9ycwAAAAAAATSYAAtiMUZvX01fdGo2dwABACtodHRwczovL3d3dy55b3V0dWJlLmNvbS93YXRjaD92PWIxRm9fTV90ajZ3AQA2aHR0cHM6Ly9pLnl0aW1nLmNvbS92aV93ZWJwL2IxRm9fTV90ajZ3L3NkZGVmYXVsdC53ZWJwAAAHeW91dHViZQAAAAAAAAAA&position=30000" \
+     -H "Authorization: yourPassword" \
+     --output track.pcm
+```
+  </ApiSection>
+  <ApiSection title="Example Request (POST)">
+
+```bash
+curl -X POST "http://your-server.com/v4/loadstream" \
+     -H "Authorization: yourPassword" \
+     -H "Content-Type: application/json" \
+     -d '{"encodedTrack":"QAAAAAMAM0hvdyB0byBBZGQgQ2hhcHRlcnMgdG8gWW91ciBWaWRlb3MgVXNpbmcgVGltZXN0YW1wcwAQWW91VHViZSBDcmVhdG9ycwAAAAAAATSYAAtiMUZvX01fdGo2dwABACtodHRwczovL3d3dy55b3V0dWJlLmNvbS93YXRjaD92PWIxRm9fTV90ajZ3AQA2aHR0cHM6Ly9pLnl0aW1nLmNvbS92aV93ZWJwL2IxRm9fTV90ajZ3L3NkZGVmYXVsdC53ZWJwAAAHeW91dHViZQAAAAAAAAAA","volume":120,"filters":{"equalizer":[{"band":0,"gain":0.2}]}}' \
+     --output track.pcm
+```
+  </ApiSection>
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="Audio Stream">
+        Returns a raw PCM stream with `Content-Type: audio/l16;rate=48000;channels=2`.
       </Accordion>
     </Accordions>
   </ApiSection>
@@ -1433,10 +1571,7 @@ These filters are unique to NodeLink, built from scratch with custom DSP impleme
 curl -X PATCH "http://your-server.com/v4/youtube/config" \
      -H "Authorization: yourPassword" \
      -H "Content-Type: application/json" \
-     -d 
-       "refreshToken": "1//0gN...",
-       "visitorData": "Cgt..."
-     
+     -d '{"refreshToken":"1//0gN...","visitorData":"Cgt..."}'
 ```
   </ApiSection>
 

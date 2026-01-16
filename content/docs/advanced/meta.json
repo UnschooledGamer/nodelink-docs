@@ -1,5 +1,5 @@
 {
   "title": "Advanced",
   "description": "NodeLink Advanced Documentation",
-  "pages": ["docker", "prometheus", "plugin-development"]
+  "pages": ["docker", "voice-receive", "prometheus", "plugin-development"]
 }

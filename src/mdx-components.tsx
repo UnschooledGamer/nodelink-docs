@@ -3,6 +3,7 @@ import type { MDXComponents } from 'mdx/types';
 import { TroubleshootingCard } from '@/components/troubleshooting-card';
 import { InfoCard } from '@/components/info-card';
 import { ApiCard, ApiSection, ApiSchema } from '@/components/api-ui';
+import { Mermaid } from '@/components/mdx/mermaid';
 
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
   return {
@@ -12,6 +13,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     ApiCard,
     ApiSection,
     ApiSchema,
+    Mermaid,
     ...components,
   };
 }

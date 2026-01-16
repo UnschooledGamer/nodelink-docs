@@ -241,6 +241,8 @@ curl "http://your-server.com/v4/trackstream?encodedTrack=QAAAjQI...&itag=251" \
      -H "Authorization: yourPassword"
 ```
 
+NodeLink also supports raw PCM streaming via `/v4/loadstream` (enable with `enableLoadStreamEndpoint: true`) when you need direct audio bytes for recording or custom processing.
+
 **Response:**
 ```json
 {
@@ -426,16 +428,24 @@ Here's where things get interesting. Let's see what's **built-in** vs what needs
     | SoundCloud | ✅ Built-in | ✅ Built-in |
     | Deezer | 🔌 Plugin | ✅ Built-in |
     | Bandcamp | 🔌 Plugin | ✅ Built-in |
+    | Audiomack | ❌ Not available | ✅ Built-in |
+    | Gaana | ❌ Not available | ✅ Built-in |
     | Twitch | ✅ Built-in | ✅ Built-in |
     | Instagram | ❌ Not available | ✅ Built-in |
     | Reddit | ❌ Not available | ✅ Built-in |
     | Kwai | ❌ Not available | ✅ Built-in |
     | NicoVideo | ⚠️ Built-in\Not working | ✅ Built-in |
-    | Vimeo | ⚠️ Built-in\Not working | ❌ Not available |
+    | Vimeo | ⚠️ Built-in\Not working | ✅ Built-in |
     | Pandora | ❌ Not available | ✅ Built-in |
     | JioSaavn | 🔌 Plugin | ✅ Built-in |
     | Local Files | ✅ Built-in | ✅ Built-in |
     | HTTP URLs | ✅ Built-in | ✅ Built-in |
+    | Amazon Music | ❌ Not available | ✅ Built-in |
+    | Mixcloud | 🔌 Plugin | ✅ Built-in |
+    | VK Music | 🔌 Plugin | ✅ Built-in |
+    | Telegram | 🔌 Plugin | ✅ Built-in |
+    | Bilibili | 🔌 Plugin | ✅ Built-in |
+    | Pinterest | ❌ Not available | ✅ Built-in |
 
   </Tab>
   <Tab value="Mirror Sources">
@@ -447,6 +457,8 @@ Here's where things get interesting. Let's see what's **built-in** vs what needs
     | Apple Music | 🔌 Plugin | ✅ Built-in | **Auto-generates token** (no $99/year needed!) |
     | Tidal | 🔌 Plugin | ✅ Built-in | Requires web token (free) |
     | Last.fm | ❌ Not available | ✅ Built-in | Track discovery, mirrors to YouTube |
+    | Shazam | ❌ Not available | ✅ Built-in | Track discovery, mirrors to YouTube |
+    | Genius | ❌ Not available | ✅ Built-in | Metadata resolve, mirrors to default search |
 
     <Callout type="success" title="Apple Music Token Magic">
       **NodeLink automatically generates Apple Music tokens** without requiring the $99/year Apple Developer Program membership. Just set `mediaApiToken: "token_here"` in config and NodeLink handles the rest.
@@ -477,12 +489,30 @@ Here's where things get interesting. Let's see what's **built-in** vs what needs
     - `dzsearch:` - Deezer direct search
     - `tdsearch:` - Tidal search (then mirrors to YouTube)
     - `bcsearch:` - Bandcamp search
+    - `admsearch:` / `audiomack:` - Audiomack search
+    - `gaanasearch:` - Gaana search
     - `jssearch:` - JioSaavn search
+    - `lfsearch:` - Last.fm search
     - `ncsearch:` / `nicovideo:` - NicoVideo search
     - `pdsearch:` - Pandora search
+    - `vksearch:` - VK Music search
+    - `mcsearch:` - Mixcloud search
+    - `bilibili:` - Bilibili search
+    - `shsearch:` / `szsearch:` - Shazam search
     - `gtts:` - Google Text-to-Speech
+    - `speak:` - Google Text-to-Speech alias
+    - `flowery:` / `ftts:` - Flowery TTS
     - `local:` / `file:` - Local file path
     - `http:` - Direct HTTP URL
+    - `search:` - Unified search across configured sources
+
+    **Recommendation prefixes:**
+    - `ytrec:` - YouTube automix recommendations
+    - `sprec:` - Spotify recommendations
+    - `dzrec:` - Deezer recommendations
+    - `tdrec:` - Tidal recommendations
+    - `jsrec:` - JioSaavn recommendations
+    - `vkrec:` - VK Music recommendations
 
     **Try it:**
     ```bash
@@ -550,7 +580,7 @@ Lavalink can **auto-download plugins** from Maven repositories. You declare them
 
 NodeLink has **most common features built-in**:
 
-- **15+ sources** out of the box
+- **30+ sources** out of the box
 - **Lyrics** from 4 providers
 - **Chapters** extraction
 - **TTS** without API keys
@@ -592,6 +622,9 @@ Some sources need tokens. Here's the reality:
     **Tidal** (`token`):
     - Requires a valid authentication token.
 
+    **VK Music** (`userToken` or `userCookie`):
+    - Requires a user token or cookie from a VK web session.
+
     <Callout type="info">
       All these services have **free tiers**. You don't need premium accounts.
     </Callout>
@@ -630,6 +663,11 @@ Some sources need tokens. Here's the reality:
     - Pandora (auto-fetches csrf token)
     - Twitch
     - Last.fm
+    - Amazon Music
+    - Mixcloud
+    - Telegram
+    - Bilibili (optional sessdata)
+    - Pinterest
     - Local files
     - HTTP URLs
     - Google TTS

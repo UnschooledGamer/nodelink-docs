@@ -1,0 +1,172 @@
+---
+title: Minimum Client Requirements
+description: The minimum NodeLink features a client must implement to be considered officially compatible.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+
+# Minimum Client Requirements
+
+<Callout type="info" title="Abstract">
+  This page defines the minimum client-side features required to be considered
+  officially compatible with NodeLink. It focuses only on endpoints, WebSocket
+  flows, and payload extensions that a client must implement. Administrative and
+  monitoring concerns are intentionally excluded.
+</Callout>
+
+---
+
+## Introduction
+
+NodeLink is compatible with the Lavalink v4 API, but it adds client-facing
+features that go beyond the standard specification. A client that wants to be
+considered an official NodeLink client must implement the minimum set below.
+These items are not server-only toggles: they require client logic.
+
+## Method
+
+The list is derived from the NodeLink server implementation and limited to
+differences that require explicit client support. Items that are operational,
+administrative, or monitoring-oriented are excluded from the minimum.
+
+## Results
+
+### Minimum Feature Set
+
+<Cards>
+  <Card title="Audio Mixer" href="#audio-mixer">
+    REST endpoints and WS events for layered audio playback.
+  </Card>
+  <Card title="Lyrics" href="#lyrics">
+    Load synced or plain lyrics via /v4/loadlyrics.
+  </Card>
+  <Card title="Chapters" href="#chapters">
+    Load video chapters via /v4/loadchapters.
+  </Card>
+  <Card title="Extra Filters" href="#extra-filters">
+    Filters not present in Lavalink.
+  </Card>
+  <Card title="Voice Receive" href="#voice-receive">
+    Dedicated WS stream for voice frames.
+  </Card>
+  <Card title="Update Player Extras" href="#update-player-extras">
+    channelId and audioTrackId support.
+  </Card>
+  <Card title="Search Prefixes" href="#search-prefixes">
+    Additional search prefixes beyond Lavalink.
+  </Card>
+</Cards>
+
+---
+
+### Audio Mixer
+
+**Minimum support**
+- REST: `POST/GET/PATCH/DELETE /v4/sessions/:sessionId/players/:guildId/mix`
+- WS events: `MixStartedEvent`, `MixEndedEvent`
+
+<Accordions>
+  <Accordion title="Why it matters for clients">
+    The mixer introduces new endpoints and event types. Clients must provide
+    methods to create, manage, and remove layers, plus handle mix lifecycle
+    events from the WebSocket.
+  </Accordion>
+</Accordions>
+
+### Lyrics
+
+**Minimum support**
+- REST: `GET /v4/loadlyrics`
+
+<Accordions>
+  <Accordion title="Why it matters for clients">
+    Lyrics are retrieved through a NodeLink-specific endpoint. Clients must
+    implement this call and handle the response format.
+  </Accordion>
+</Accordions>
+
+### Chapters
+
+**Minimum support**
+- REST: `GET /v4/loadchapters`
+
+<Accordions>
+  <Accordion title="Why it matters for clients">
+    Chapters require a NodeLink-specific endpoint. Clients must implement the
+    request and expose the chapter data to users.
+  </Accordion>
+</Accordions>
+
+### Extra Filters
+
+**Minimum support**
+- Filters: `echo`, `chorus`, `compressor`, `highpass`, `phaser`, `spatial`
+
+<Accordions>
+  <Accordion title="Why it matters for clients">
+    These filters extend the Lavalink filter schema. Clients must allow these
+    filter objects in the update payload and avoid rejecting unknown keys.
+  </Accordion>
+</Accordions>
+
+### Voice Receive
+
+**Minimum support**
+- WS: `/v4/websocket/voice/:guildId`
+
+<Accordions>
+  <Accordion title="Why it matters for clients">
+    Voice Receive uses a second WebSocket stream. Clients must handle the
+    binary frame format and reconnect logic for this channel.
+  </Accordion>
+</Accordions>
+
+### Update Player Extras
+
+**Minimum support**
+- `voice.channelId` in Update Player payloads
+
+<Accordions>
+  <Accordion title="Why it matters for clients">
+    NodeLink extends the Update Player schema. Clients must pass and preserve
+    `voice.channelId` for DAVE stability during voice connections.
+  </Accordion>
+</Accordions>
+
+### Search Prefixes
+
+**Minimum support**
+- Additional prefixes: `admsearch`, `amsearch`, `audiomack`, `bcsearch`,
+  `bilibili`, `dzsearch`, `flowery`, `ftts`, `gaanasearch`, `gtts`, `jssearch`,
+  `lfsearch`, `mcsearch`, `ncsearch`, `nicovideo`, `pdsearch`, `shsearch`,
+  `speak`, `spsearch`, `szsearch`, `tdsearch`, `vksearch`
+
+<Accordions>
+  <Accordion title="Why it matters for clients">
+    These prefixes are resolved by NodeLink sources. Clients must allow them
+    as valid search identifiers and not block them as invalid inputs.
+  </Accordion>
+</Accordions>
+
+---
+
+## Optional (Not Required for Official Compatibility)
+
+These features are available in NodeLink but are not part of the minimum
+compatibility bar for clients:
+
+- `/v4/connection` (connection metrics endpoint used for diagnostics)
+- `/v4/encodedtracks` (batch track encoding helper)
+- `search:` unified search prefix for `/v4/loadtracks`
+- `:playlist:` type modifier in search prefixes (example: `scsearch:playlist:lofi`)
+- `track.audioTrackId` in Update Player payloads (optional; defaults to original
+  audio unless the client selects an alternate YouTube auto-dubbed track)
+
+---
+
+## Conclusion
+
+If a client implements the seven minimum areas above, it can be marked as an
+official NodeLink-compatible client in the README feature matrix.

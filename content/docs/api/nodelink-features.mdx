@@ -348,12 +348,7 @@ This feature must be explicitly enabled in your configuration:
 
 ```js
 // config.js
-enableTrackStreaming: true
-```
-
-```bash
-# Docker environment variable
-NODELINK_ENABLETRACKSTREAMING=true
+enableTrackStreamEndpoint: true
 ```
 </Callout>
   </ApiSection>
@@ -423,6 +418,42 @@ Enable this feature carefully as it allows direct audio downloads. Consider rate
 ```
 
 <p>The response includes: <strong>url</strong> (Direct streaming URL that expires after some time), <strong>protocol</strong> (Streaming protocol http/https), <strong>format</strong> (Audio format being streamed), <strong>hlsUrl</strong> (HLS playlist URL if available), and <strong>formats</strong> (All available quality/format options with their itags).</p>
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="LoadStream" isNew method="GET / POST" url="/v4/loadstream" description="Stream raw PCM audio for custom processing or recording.">
+  <ApiSection title="Configuration">
+<Callout type="warn" title="Feature Must Be Enabled">
+Enable the endpoint in config:
+
+```js
+// config.js
+enableLoadStreamEndpoint: true
+```
+</Callout>
+  </ApiSection>
+
+  <ApiSection title="Query / Body Parameters">
+    <ApiSchema name="encodedTrack" type="string" required description="Base64 encoded track string." />
+    <ApiSchema name="volume" type="number" description="Volume 0 to 1000 (default: 100)." />
+    <ApiSchema name="position" type="number" description="Start position in milliseconds." />
+    <ApiSchema name="filters" type="object | string" description="JSON filters object (query can be JSON string)." />
+  </ApiSection>
+
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/v4/loadstream?encodedTrack=QAAAAAMAM0hvdyB0byBBZGQgQ2hhcHRlcnMgdG8gWW91ciBWaWRlb3MgVXNpbmcgVGltZXN0YW1wcwAQWW91VHViZSBDcmVhdG9ycwAAAAAAATSYAAtiMUZvX01fdGo2dwABACtodHRwczovL3d3dy55b3V0dWJlLmNvbS93YXRjaD92PWIxRm9fTV90ajZ3AQA2aHR0cHM6Ly9pLnl0aW1nLmNvbS92aV93ZWJwL2IxRm9fTV90ajZ3L3NkZGVmYXVsdC53ZWJwAAAHeW91dHViZQAAAAAAAAAA&position=30000" \
+     -H "Authorization: yourPassword" \
+     --output track.pcm
+```
+  </ApiSection>
+
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="Audio Stream">
+        Returns a raw PCM stream with `Content-Type: audio/l16;rate=48000;channels=2`.
       </Accordion>
     </Accordions>
   </ApiSection>
