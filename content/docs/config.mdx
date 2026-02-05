@@ -316,10 +316,19 @@ Configuration for audio quality, updates, and playback behavior.
       type: 'number',
       default: '10000'
     },
+    eventTimeoutMs: {
+      description: 'Timeout (ms) for internal event processing.',
+      type: 'number',
+      default: '15000'
+    },
     zombieThresholdMs: {
       description: 'Threshold to detect zombie connections.',
       type: 'number',
       default: '60000'
+    },
+    'audio.fading': {
+      description: 'Configuration for smooth volume transitions (track start/end/stop/seek/ducking).',
+      type: 'object'
     },
     enableHoloTracks: {
       description: 'Enables HoloTracks functionality.',
@@ -487,12 +496,12 @@ Configuration for specific music and media providers.
     'clients.playback': {
       description: 'Clients used for playback.',
       type: 'string[]',
-      default: '["AndroidVR", "TV", "TVEmbedded", "IOS"]'
+      default: '["AndroidVR", "TV", "WebEmbedded", "WebParentTools", "Web", "IOS"]'
     },
     'clients.resolve': {
       description: 'Clients used for resolving rich metadata.',
       type: 'string[]',
-      default: '["AndroidVR", "TV", "TVEmbedded", "IOS", "Web"]'
+      default: '["AndroidVR", "TV", "WebEmbedded", "WebParentTools", "IOS", "Web"]'
     },
     'clients.settings.TV.refreshToken': {
       description: 'Refresh token(s) for the TV client; accepts a string or array for rotation.',
@@ -537,7 +546,12 @@ Configuration for specific music and media providers.
       default: '1'
     },
     albumPageLoadConcurrency: { type: 'number', default: '5' },
-    allowExplicit: { type: 'boolean', default: 'true' }
+    allowExplicit: { type: 'boolean', default: 'true' },
+    sp_dc: {
+      description: 'Cookie required for fetching Spotify Canvas.',
+      type: 'string',
+      default: '""'
+    }
   }}
 />
 
@@ -580,43 +594,104 @@ Configuration for specific music and media providers.
   }}
 />
 
-### Other Sources
+### Songlink
 
 <TypeTable
   type={{
-    bandcamp: { description: 'Bandcamp source.', type: 'object' },
-    audiomack: { description: 'Audiomack source.', type: 'object' },
-    deezer: { description: 'Enabled by default. Supports ARL/Decryption Key.', type: 'object' },
-    gaana: { description: 'Gaana source.', type: 'object' },
-    jiosaavn: { description: 'Supports playlist/artist load limits.', type: 'object' },
-    vkmusic: { description: 'VK Music source. Supports userToken/userCookie.', type: 'object' },
-    amazonmusic: { description: 'Amazon Music source.', type: 'object' },
-    mixcloud: { description: 'Mixcloud source.', type: 'object' },
-    nicovideo: { description: 'NicoVideo source.', type: 'object' },
-    telegram: { description: 'Telegram audio source.', type: 'object' },
-    bilibili: { description: 'Bilibili source (supports sessdata).', type: 'object' },
-    shazam: { description: 'Shazam source.', type: 'object' },
-    genius: { description: 'Genius source.', type: 'object' },
-    pinterest: { description: 'Pinterest source.', type: 'object' },
-    instagram: { description: 'Instagram source.', type: 'object' },
-    kwai: { description: 'Kwai source.', type: 'object' },
-    twitch: { description: 'Twitch source.', type: 'object' },
-    vimeo: { description: 'Vimeo source.', type: 'object' },
-    reddit: { description: 'Reddit source.', type: 'object' },
-    lastfm: { description: 'Last.fm source.', type: 'object' },
-    pandora: { description: 'May require manual CSRF token or remoteTokenUrl due to region locks.', type: 'object' },
-    local: { description: 'Local file playback. Base path configurable.', type: 'object' },
-    http: { description: 'Direct HTTP stream playback.', type: 'object' },
-    soundcloud: { description: 'SoundCloud source (optional clientId).', type: 'object' },
-    'google-tts': { 
-      description: 'Google Text-to-Speech. Configurable language.', 
-      type: 'object',
-      default: '{ language: "en-US" }'
+    enabled: { type: 'boolean', default: 'true' },
+    apiKey: { type: 'string', default: '""' },
+    userCountry: { type: 'string', default: '"US"' },
+    songIfSingle: { type: 'boolean', default: 'true' },
+    useApi: { type: 'boolean', default: 'true' },
+    useScrapeFallback: { type: 'boolean', default: 'true' },
+    preferredPlatforms: {
+      type: 'string[]',
+      default: '["spotify", "appleMusic", "youtubeMusic", "youtube", "deezer", "tidal", "amazonMusic", "soundcloud", "bandcamp", "audius", "audiomack", "pandora", "itunes", "amazonStore"]'
     },
-    flowery: { 
-      description: 'Flowery TTS. Configurable voice, speed, silence.', 
-      type: 'object',
-      default: '{ voice: "Salli", speed: 1.0 }'
+    fallbackToAny: { type: 'boolean', default: 'true' }
+  }}
+/>
+
+### Eternal Box
+
+<TypeTable
+  type={{
+    enabled: { type: 'boolean', default: 'true' },
+    baseUrl: { type: 'string', default: '"https://eternalboxmirror.xyz"' },
+    searchResults: { type: 'number', default: '30' },
+    enrichSpotify: { type: 'boolean', default: 'true' },
+    includeAnalysis: { type: 'boolean', default: 'true' },
+    includeAnalysisSummary: { type: 'boolean', default: 'true' },
+    eternalStream: { type: 'boolean', default: 'true' },
+    infiniteStream: { type: 'boolean', default: 'true' },
+    cacheMaxBytes: { type: 'number', default: '20971520' }
+  }}
+/>
+
+### Gaana
+
+<TypeTable
+  type={{
+    enabled: { type: 'boolean', default: 'true' },
+    apiUrl: { type: 'string', default: '"https://gaana.1lucas1apk.fun/api"' },
+    streamQuality: { type: 'string', default: '"high"' },
+    playlistLoadLimit: { type: 'number', default: '100' },
+    albumLoadLimit: { type: 'number', default: '100' },
+    artistLoadLimit: { type: 'number', default: '100' }
+  }}
+/>
+
+### Audius
+
+<TypeTable
+  type={{
+    enabled: { type: 'boolean', default: 'true' },
+    appName: { type: 'string', default: '""' },
+    apiKey: { type: 'string', default: '""' },
+    apiSecret: { type: 'string', default: '""' },
+    playlistLoadLimit: { type: 'number', default: '100' },
+    albumLoadLimit: { type: 'number', default: '100' }
+  }}
+/>
+
+### Qobuz
+
+<TypeTable
+  type={{
+    enabled: { type: 'boolean', default: 'true' },
+    userToken: { type: 'string', default: '""' },
+    formatId: { 
+      description: '5 = MP3 320kbps, 6 = FLAC, 27 = Hi-Res FLAC.',
+      type: 'string', 
+      default: '"5"' 
+    },
+    allowExplicit: { type: 'boolean', default: 'true' }
+  }}
+/>
+
+### Yandex Music
+
+<TypeTable
+  type={{
+    enabled: { type: 'boolean', default: 'true' },
+    accessToken: { type: 'string', default: '""' },
+    allowUnavailable: { type: 'boolean', default: 'false' },
+    allowExplicit: { type: 'boolean', default: 'true' },
+    artistLoadLimit: { type: 'number', default: '1' },
+    albumLoadLimit: { type: 'number', default: '1' },
+    playlistLoadLimit: { type: 'number', default: '1' }
+  }}
+/>
+
+### Piper TTS
+
+<TypeTable
+  type={{
+    enabled: { type: 'boolean', default: 'false' },
+    url: { 
+      description: 'URL of the Piper TTS HTTP server.',
+      type: 'string', 
+      default: '"http://localhost:5000"' 
     }
   }}
 />
@@ -770,6 +845,27 @@ Configuration for specific music and media providers.
 
 ---
 
+## Meanings
+
+Configuration for track meaning/background providers.
+
+<TypeTable
+  type={{
+    'letrasmus.enabled': {
+      description: 'If true, enables Letras.mus.br meanings.',
+      type: 'boolean',
+      default: 'true'
+    },
+    'wikipedia.enabled': {
+      description: 'If true, enables Wikipedia meanings.',
+      type: 'boolean',
+      default: 'true'
+    }
+  }}
+/>
+
+---
+
 ## Lyrics
 
 Configuration for lyrics providers.
@@ -790,7 +886,9 @@ Configuration for lyrics providers.
       default: '""'
     },
     'lrclib.enabled': { type: 'boolean', default: 'true' },
+    'letrasmus.enabled': { type: 'boolean', default: 'true' },
     'bilibili.enabled': { type: 'boolean', default: 'true' },
+    'yandexmusic.enabled': { type: 'boolean', default: 'true' },
     'applemusic.enabled': { type: 'boolean', default: 'true' },
     'applemusic.advanceSearch': {
       description: 'Uses YTMusic to match title/artist for better accuracy.',
@@ -800,7 +898,7 @@ Configuration for lyrics providers.
   }}
 />
 
-**Supported Providers:** YouTube, Genius, Musixmatch, LRCLib, Apple Music, Bilibili.
+**Supported Providers:** YouTube, Genius, Musixmatch, LRCLib, Letras.mus.br, Bilibili, Yandex Music, Apple Music.
 
 ---
 

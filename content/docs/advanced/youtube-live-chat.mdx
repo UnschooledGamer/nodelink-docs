@@ -1,0 +1,66 @@
+---
+title: YouTube Live Chat
+description: Receive real-time YouTube live chat messages via WebSocket.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { ApiCard, ApiSection, ApiSchema } from '@/components/api-ui';
+
+# YouTube Live Chat
+
+NodeLink supports receiving real-time chat messages from YouTube live streams via a WebSocket connection.
+
+<Callout type="info">
+This feature works by scraping the YouTube live chat feed. It does not require a Google Cloud API Key if your node is correctly configured with YouTube cookies or OAuth.
+</Callout>
+
+## Connecting
+
+Connect to the live chat WebSocket using the video identifier:
+
+`WS /v4/websocket/youtube/live/{videoId}`
+
+You can provide:
+- **videoId**: The 11-character YouTube video ID (e.g., `dQw4w9WgXcQ`).
+- **guildId**: If a player in that guild is currently playing a YouTube video, NodeLink will automatically resolve the video ID.
+- **encodedTrack**: A base64 encoded YouTube track string.
+
+## Event Format
+
+Messages are sent as JSON strings.
+
+### Chat Message
+
+```json
+{
+  "type": "message",
+  "author": {
+    "name": "Lucas",
+    "id": "UC...",
+    "avatar": "https://...",
+    "isOwner": false,
+    "isModerator": true,
+    "isVerified": true
+  },
+  "content": "Hello world!",
+  "timestamp": 1733612345678
+}
+```
+
+### Action Event (SuperChats, Memberships)
+
+```json
+{
+  "type": "action",
+  "action": "superchat",
+  "author": { ... },
+  "amount": "$5.00",
+  "content": "Great stream!",
+  "timestamp": 1733612345678
+}
+```
+
+## Implementation Notes
+
+- **Clustering**: If cluster mode is enabled, NodeLink will automatically delegate the live chat fetcher to a specialized **Source Worker** to prevent blocking the main process event loop.
+- **Rate Limits**: YouTube may temporarily block chat scraping if too many concurrent connections are made from the same IP.

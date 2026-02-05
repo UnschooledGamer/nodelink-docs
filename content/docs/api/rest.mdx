@@ -592,14 +592,18 @@ curl -X GET "http://your-server.com/v4/sessions/yourSessionId/players/yourGuildI
   
   <ApiSection title="Body Parameters">
     <ApiSchema name="track.encoded" type="string" description="Base64 encoded track to play (null to stop)" />
-    <ApiSchema name="track.identifier" type="string" description="Track identifier to resolve and play" />
+    <ApiSchema name="track.identifier" type="string" description="NOT SUPPORTED. Use track.encoded instead." />
     <ApiSchema name="track.userData" type="object" description="Custom data to attach to the track" />
     <ApiSchema name="track.audioTrackId" type="string" description="Specific audio track ID to play (for multi-audio videos)" />
+    <ApiSchema name="nextTrack" type="object" description="Information about the next track to preload for gapless transitions." />
+    <ApiSchema name="nextTrack.encoded" type="string" description="Base64 encoded track to preload." />
+    <ApiSchema name="nextTrack.identifier" type="string" description="NOT SUPPORTED. Use nextTrack.encoded instead." />
     <ApiSchema name="position" type="number" description="Track position in milliseconds (min: 0)" />
     <ApiSchema name="endTime" type="number" description="When to stop the track in milliseconds (null to reset)" />
     <ApiSchema name="volume" type="number" description="Player volume from 0 to 1000 (100 = 100%)" />
     <ApiSchema name="paused" type="boolean" description="Whether the player should be paused" />
     <ApiSchema name="filters" type="object" description="Audio filters to apply (see Filters section)" />
+    <ApiSchema name="fading" type="object" description="Configure smooth volume transitions (track start/end/stop/seek/ducking)." />
     <ApiSchema name="voice.token" type="string" description="Discord voice token" />
     <ApiSchema name="voice.endpoint" type="string" description="Discord voice endpoint" />
     <ApiSchema name="voice.sessionId" type="string" description="Discord voice session ID" />
@@ -614,12 +618,14 @@ curl -X PATCH "http://your-server.com/v4/sessions/yourSessionId/players/yourGuil
        "track": {
          "encoded": "QAAAjQIAJVJpY2sgQXN0bGV5..."
        },
-       "volume": 100,
-       "filters": {
-         "equalizer": [
-           {"band": 0, "gain": 0.2}
-         ]
-       }
+       "nextTrack": {
+         "encoded": "QAAAAAMARFJpY2sgQXN0bGV5..."
+       },
+       "fading": {
+         "enabled": true,
+         "trackStart": { "duration": 1000, "curve": "linear" }
+       },
+       "volume": 100
      }'
 ```
   </ApiSection>
@@ -655,6 +661,19 @@ curl -X PATCH "http://your-server.com/v4/sessions/yourSessionId/players/yourGuil
       {"band": 0, "gain": 0.2}
     ]
   },
+  "fading": {
+    "enabled": true,
+    "trackStart": { "duration": 1000, "curve": "linear" },
+    "trackEnd": { "duration": 0, "curve": "linear" },
+    "trackStop": { "duration": 0, "curve": "linear" },
+    "seek": { "duration": 0, "curve": "linear" },
+    "ducking": {
+      "enabled": false,
+      "duration": 0,
+      "targetVolume": 0.3,
+      "curve": "linear"
+    }
+  },
   "state": {
     "time": 1764813548928,
     "position": 0,
@@ -687,6 +706,32 @@ curl -X DELETE "http://your-server.com/v4/sessions/yourSessionId/players/yourGui
 ```
 204 No Content
 ```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Subscribe Lyrics" isNew method="POST / DELETE" url="/v4/sessions/{sessionId}/players/{guildId}/lyrics/subscribe" description="Subscribes or unsubscribes from real-time lyrics updates for a specific player.">
+  <ApiSection title="POST - Subscribe">
+    Enables sending lyrics events via the session WebSocket when the current track has available lyrics.
+    <ApiSchema name="skipTrackSource" type="boolean" description="If true, ignores the track source and tries all available lyrics providers (default: false)." />
+  </ApiSection>
+
+  <ApiSection title="DELETE - Unsubscribe">
+    Disables lyrics events for this player.
+  </ApiSection>
+
+  <ApiSection title="Example Request (POST)">
+```bash
+curl -X POST "http://your-server.com/v4/sessions/yourSessionId/players/yourGuildId/lyrics/subscribe?skipTrackSource=true" \
+     -H "Authorization: yourPassword"
+```
+  </ApiSection>
+
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="Success">
+        `204 No Content`
       </Accordion>
     </Accordions>
   </ApiSection>
@@ -954,14 +999,85 @@ curl -X GET "http://your-server.com/version"
     <Accordions>
       <Accordion title="Example Response (Plain Text)">
 ```text
-3.3.0
+3.5.0
 ```
       </Accordion>
     </Accordions>
   </ApiSection>
 </ApiCard>
 
-## NodeLink Specific
+## Cluster & Management
+
+<ApiCard name="GetWorkers" isNew method="GET" url="/v4/workers" description="Returns detailed metrics and status for all active cluster workers.">
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/v4/workers" \
+     -H "Authorization: yourPassword"
+```
+  </ApiSection>
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="Example Response">
+```json
+[
+  {
+    "id": 1,
+    "clusterId": 1,
+    "pid": 24560,
+    "stats": {
+      "players": 12,
+      "playingPlayers": 8
+    },
+    "health": true,
+    "uptime": 1200
+  }
+]
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Terminate Worker" isNew method="PATCH" url="/v4/workers" description="Forcefully terminates a worker process. Useful for recycling leaked processes or manual scaling.">
+  <ApiSection title="Body Parameters">
+    <ApiSchema name="code" type="string" required description="Security code configured in cluster.endpoint.code." />
+    <ApiSchema name="id" type="number" description="Internal worker ID." />
+    <ApiSchema name="clusterId" type="number" description="Cluster-specific worker ID." />
+    <ApiSchema name="pid" type="number" description="System Process ID." />
+  </ApiSection>
+  <ApiSection title="Example Request">
+```bash
+curl -X PATCH "http://your-server.com/v4/workers" \
+     -H "Authorization: yourPassword" \
+     -H "Content-Type: application/json" \
+     -d '{"code": "ADMIN_PATCH_CODE", "pid": 24560}'
+```
+  </ApiSection>
+</ApiCard>
+
+## YouTube Source Configuration
+
+<ApiCard name="Update Config" isNew method="PATCH" url="/v4/youtube/config" description="Updates the YouTube configuration (RefreshToken or VisitorData) in real-time without restarting the server.">
+  <ApiSection title="Body Parameters">
+    <ApiSchema name="refreshToken" type="string" description="New Google OAuth refresh token." />
+    <ApiSchema name="visitorData" type="string" description="Updated Visitor Data for poToken attestation." />
+  </ApiSection>
+  <ApiSection title="Response">
+```json
+{
+  "message": "YouTube configuration updated successfully.",
+  "workersUpdated": 4,
+  "fieldsUpdated": ["refreshToken", "visitorData"]
+}
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="OAuth" isNew method="POST" url="/v4/youtube/oauth" description="Exchange a Refresh Token for a valid Access Token.">
+  <ApiSection title="Body Parameters">
+    <ApiSchema name="refreshToken" type="string" required description="The refresh token to exchange." />
+  </ApiSection>
+</ApiCard>
 
 <ApiCard name="LoadLyrics" method="GET" url="/v4/loadlyrics" description="Loads synchronized or plain text lyrics for a track from various sources.">
   <ApiSection title="Example Request">
@@ -1106,6 +1222,49 @@ curl -X GET "http://your-server.com/v4/loadchapters?encodedTrack=QAAAAAMAM0hvdyB
   </ApiSection>
 </ApiCard>
 
+<ApiCard name="LoadMeaning" isNew method="GET" url="/v4/meaning" description="Retrieves background information, history, or explanations for a track or artist from various sources (Wikipedia, Letras.mus.br).">
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/v4/meaning?encodedTrack=QAAAAAMARFJpY2sgQXN0bGV5..." \
+     -H "Authorization: yourPassword"
+```
+  </ApiSection>
+  <ApiSection title="Query Parameters">
+    <ApiSchema name="encodedTrack" type="string" required description="Base64 encoded track string." />
+    <ApiSchema name="lang" type="string" description="Language code for the meaning (default: 'en')." />
+  </ApiSection>
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="Success (track meaning)">
+```json
+{
+  "loadType": "meaning",
+  "data": {
+    "title": "Never Gonna Give You Up",
+    "description": "1987 song by Rick Astley",
+    "paragraphs": [
+      "\"Never Gonna Give You Up\" is the debut single recorded by English singer-songwriter Rick Astley...",
+      "The song was a worldwide number-one hit, initially in the United Kingdom in 1987..."
+    ],
+    "url": "https://en.wikipedia.org/wiki/Never_Gonna_Give_You_Up",
+    "provider": "wikipedia",
+    "type": "track"
+  }
+}
+```
+      </Accordion>
+      <Accordion title="No Meaning Found">
+```json
+{
+  "loadType": "empty",
+  "data": {}
+}
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
 <ApiCard name="TrackStream" method="GET" url="/v4/trackstream" description="Directly streams the track audio (if enabled).">
   <ApiSection title="Query Parameters">
     <ApiSchema name="encodedTrack" type="string" required description="The base64 encoded track." />
@@ -1241,8 +1400,8 @@ The Audio Mixer allows overlaying auxiliary audio tracks (like TTS, sound effect
 
 <ApiCard name="Add Mix Layer" isNew method="POST" url="/v4/sessions/{sessionId}/players/{guildId}/mix" description="Adds a new audio track to be mixed over the current playback.">
   <ApiSection title="Body">
-    <ApiSchema name="track.encoded" type="string" description="Base64 encoded track string (optional if identifier provided)" />
-    <ApiSchema name="track.identifier" type="string" description="Identifier to resolve (optional if encoded provided)" />
+    <ApiSchema name="track.encoded" type="string" description="Base64 encoded track string (Required)" />
+    <ApiSchema name="track.identifier" type="string" description="NOT SUPPORTED. Use track.encoded instead." />
     <ApiSchema name="track.userData" type="object" description="Optional user data" />
     <ApiSchema name="volume" type="number" description="Float 0.0 to 1.0 (Default: 0.8)" />
   </ApiSection>

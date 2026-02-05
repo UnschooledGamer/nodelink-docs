@@ -823,6 +823,47 @@ The beauty is that **you're not locked in**. These are tools, not commitments.
 
 ---
 
+## Architecture (v3.5.0+)
+
+NodeLink v3.5.0 introduced a major architectural shift nicknamed **"The End of Stutter."**
+
+### Two-Tiered Cluster Model
+
+Unlike Lavalink which typically runs as a single process (or requires external load balancers), NodeLink features a built-in tiered clustering system:
+
+1.  **Source Workers**: Dedicated to non-deterministic I/O tasks.
+    - Searching (YouTube, Spotify, etc.)
+    - Resolving metadata
+    - Scraping lyrics & chapters
+    - Delegating heavy JSON parsing away from the main thread.
+2.  **Voice Workers**: Specialized for real-time DSP (Digital Signal Processing).
+    - Opus encoding/decoding
+    - Audio filtering (Equalizer, Echo, etc.)
+    - Mixing layers
+    - Running with **High OS Priority** to ensure audio frames are delivered every 20ms without fail.
+
+### Binary Socket Bus
+
+To achieve maximum throughput with minimum latency, NodeLink uses a custom **Binary Socket Bus** for inter-process communication (IPC). 
+
+- **Unix Sockets / Named Pipes**: Bypasses the overhead of the network stack.
+- **V8 Serialization**: Directly transfers complex JavaScript objects between processes without slow JSON stringification.
+- **Ring Buffers**: Eliminates Garbage Collection (GC) pauses during audio processing.
+
+---
+
+## Security & Protocols
+
+### DAVE (Discord Audio Visual Encryption)
+
+NodeLink fully supports Discord's new **DAVE** protocol (`aead_aes256_gcm_rtpsize`). This ensures your audio is end-to-end encrypted and remains compatible with Discord's latest security requirements without any manual configuration.
+
+### SABR & PO Tokens
+
+For YouTube playback, NodeLink integrates the **SABR** adaptive streaming protocol and a built-in **PO Token (Proof of Origin)** manager. This significantly reduces "Video Unavailable" or "Bot Detected" errors by providing valid attestation for every stream request.
+
+---
+
 ## Detecting NodeLink
 
 Want to detect if you're connected to NodeLink vs Lavalink? Check the `/v4/info` endpoint:

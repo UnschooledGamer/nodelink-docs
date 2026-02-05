@@ -303,6 +303,50 @@ NodeLink sends various events to keep clients informed about playback status, pl
   </ApiSection>
 </ApiCard>
 
+<ApiCard name="StreamMetadataEvent" method="EVENT" description="Emitted when metadata (like ICY titles from radio streams) is received.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "StreamMetadataEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID" />
+    <ApiSchema name="stream" type="object" description="The metadata received." />
+  </ApiSection>
+  <ApiSection title="Example">
+```json
+{
+  "op": "event",
+  "type": "StreamMetadataEvent",
+  "guildId": "...",
+  "stream": {
+    "metadata": {
+      "streamTitle": "Artist - Song Name",
+      "streamUrl": "http://radio.example.com"
+    }
+  }
+}
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="EternalBoxInfoEvent" method="EVENT" description="Sent when an Eternal Box (Infinite Jukebox) track analysis is ready.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "EternalBoxInfoEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID" />
+    <ApiSchema name="eternalbox" type="object" description="Analysis beat map and metadata." />
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="EternalBoxJumpEvent" method="EVENT" description="Sent every time the Eternal Box engine performs a seamless jump.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "EternalBoxJumpEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID" />
+    <ApiSchema name="fromBeat" type="number" description="Source beat index." />
+    <ApiSchema name="toBeat" type="number" description="Destination beat index." />
+    <ApiSchema name="jumpType" type="string" description="Type of jump (e.g., 'jump', 'loop')." />
+  </ApiSection>
+</ApiCard>
+
 ### WebSocket Closed Event
 
 <ApiCard name="WebSocketClosedEvent" method="EVENT" description="Sent when the voice WebSocket connection to Discord closes.">
@@ -333,12 +377,15 @@ NodeLink sends various events to keep clients informed about playback status, pl
   </ApiSection>
 </ApiCard>
 
-<ApiCard name="WorkerFailedEvent" method="EVENT" description="Emitted when a cluster worker fails and affected players are dropped.">
+<ApiCard name="WorkerFailedEvent" isNew method="EVENT" description="Emitted when a cluster worker fails and affected players are dropped.">
   <ApiSection title="Payload Structure">
     <ApiSchema name="op" type="string" description='Always "event"' />
     <ApiSchema name="type" type="string" description='Always "WorkerFailedEvent"' />
     <ApiSchema name="affectedGuilds" type="string[]" description="Guild IDs impacted by the worker failure." />
     <ApiSchema name="message" type="string" description="Human-readable summary." />
+  </ApiSection>
+  <ApiSection title="Notes">
+    When a worker fails, all players assigned to that worker are destroyed. NodeLink will automatically emit a `WebSocketClosedEvent` for each affected guild with code `5001` and reason `worker_failed`.
   </ApiSection>
   <ApiSection title="Example">
 ```json
@@ -547,6 +594,35 @@ NodeLink sends various events to keep clients informed about playback status, pl
   }
 }
 ```
+  </ApiSection>
+</ApiCard>
+
+### Lyrics Events
+
+<ApiCard name="LyricsFoundEvent" method="EVENT" description="Emitted when lyrics are found for the currently playing track.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "LyricsFoundEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID." />
+    <ApiSchema name="lyrics" type="object" description="Full lyrics object including all lines." />
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="LyricsLineEvent" method="EVENT" description="Emitted in real-time as the track progresses to the next line.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "LyricsLineEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID." />
+    <ApiSchema name="lineIndex" type="number" description="Index of the current line." />
+    <ApiSchema name="line" type="object" description="The current line data (text, timestamp, duration)." />
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="LyricsNotFoundEvent" method="EVENT" description="Emitted if lyrics subscription was active but no lyrics could be resolved.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "LyricsNotFoundEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID." />
   </ApiSection>
 </ApiCard>
 

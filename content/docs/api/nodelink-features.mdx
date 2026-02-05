@@ -68,6 +68,58 @@ Features unique to NodeLink that extend beyond standard Lavalink compatibility.
   </ApiSection>
 </ApiCard>
 
+## Advanced Playback
+
+<ApiCard name="Fading" isNew method="FEATURE" url="fading" description="Smooth volume transitions for track changes, seeking, and pausing.">
+  <ApiSection title="Overview">
+    NodeLink supports high-fidelity volume fading to prevent jarring audio clips. This can be configured globally or per-request in the player update payload.
+  </ApiSection>
+
+  <ApiSection title="Configuration Structure">
+    The `fading` object contains settings for different scenarios:
+    - `trackStart`: Fade in when a new track begins.
+    - `trackEnd`: Fade out as a track reaches its end.
+    - `trackStop`: Fade out when playback is stopped.
+    - `seek`: Fade out before and fade in after a seek operation.
+    - `ducking`: Lower volume temporarily (e.g., during a mix layer).
+
+    Each section accepts:
+    - `duration`: Time in milliseconds.
+    - `curve`: Mathematical curve for the fade (`linear`, `exponential`, `logarithmic`, `s-curve`).
+  </ApiSection>
+
+  <ApiSection title="Usage Example">
+```json
+{
+  "fading": {
+    "enabled": true,
+    "trackStart": { "duration": 1500, "curve": "s-curve" },
+    "seek": { "duration": 500, "curve": "linear" }
+  }
+}
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="Gapless Preloading" isNew method="FEATURE" url="nextTrack" description="Queue the next track early to ensure near-instant transitions.">
+  <ApiSection title="Overview">
+    By providing a `nextTrack` in the player update, NodeLink will begin resolving and buffering the subsequent track while the current one is still playing. 
+    
+    When the active track finishes, NodeLink immediately switches to the preloaded resource, resulting in a "gapless" experience.
+  </ApiSection>
+
+  <ApiSection title="Usage">
+```json
+{
+  "nextTrack": {
+    "encoded": "QAAAAAMARFJpY2sgQXN0bGV5...",
+    "userData": { "context": "queued" }
+  }
+}
+```
+  </ApiSection>
+</ApiCard>
+
 ## Enhanced Track Metadata
 
 <ApiCard name="Holo Tracks" method="CONFIG" url="enableHoloTracks" description="Automatically enriches tracks with comprehensive metadata when they start playing.">
@@ -164,6 +216,80 @@ Adds one extra YouTube API request per track start (100-300ms latency). Only wor
       }
     }
   }
+}
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
+## Meaning System
+
+<ApiCard name="Meanings" isNew method="FEATURE" url="/v4/meaning" description="Fetch background information and history for any track or artist.">
+  <ApiSection title="Overview">
+    The Meaning System allows clients to retrieve encyclopedic information, history, and context for tracks and artists. It aggregates data from multiple providers:
+    - **Wikipedia**: Detailed historical and biographical data.
+    - **Letras.mus.br**: Track meanings and cultural context (primarily for Portuguese/Spanish content).
+
+    This feature is perfect for bots that want to provide "Did you know?" facts about the music being played.
+  </ApiSection>
+
+  <ApiSection title="Usage">
+    ```bash
+    curl -X GET "http://your-server.com/v4/meaning?encodedTrack=..."
+    ```
+  </ApiSection>
+
+  <ApiSection title="Example Response">
+```json
+{
+  "loadType": "meaning",
+  "data": {
+    "title": "Never Gonna Give You Up",
+    "description": "1987 song by Rick Astley",
+    "paragraphs": [
+      ""Never Gonna Give You Up" is the debut single recorded by English singer-songwriter Rick Astley...",
+      "The song was a worldwide number-one hit, initially in the United Kingdom in 1987..."
+    ],
+    "url": "https://en.wikipedia.org/wiki/Never_Gonna_Give_You_Up",
+    "provider": "wikipedia",
+    "type": "track"
+  }
+}
+```
+  </ApiSection>
+</ApiCard>
+
+## Eternal Box (Infinite Jukebox)
+
+<ApiCard name="Eternal Box" isNew method="SOURCE" url="eternalbox" description="Play an infinite, ever-changing version of any song.">
+  <ApiSection title="Overview">
+    Eternal Box (based on the Infinite Jukebox algorithm) analyzes a track's rhythm, beats, and acoustic segments to create a graph of similar-sounding points. 
+    
+    During playback, the engine can "jump" from one part of the song to another seamlessly, extending the track indefinitely without sounding repetitive or broken.
+  </ApiSection>
+
+  <ApiSection title="How to play">
+    Use the `eternalbox:` prefix or a supported URL:
+    - `eternalbox:SPOTIFY_ID`
+    - `https://eternalboxmirror.xyz/jukebox_go.html?id=SPOTIFY_ID`
+  </ApiSection>
+
+  <ApiSection title="WebSocket Events">
+    <Accordions>
+      <Accordion title="EternalBoxInfoEvent">
+        Sent when analysis is complete, containing the full beat map.
+      </Accordion>
+      <Accordion title="EternalBoxJumpEvent">
+        Sent every time the engine performs a seamless jump or loop.
+```json
+{
+  "op": "event",
+  "type": "EternalBoxJumpEvent",
+  "guildId": "...",
+  "fromBeat": 124,
+  "toBeat": 42,
+  "jumpType": "jump"
 }
 ```
       </Accordion>
@@ -764,58 +890,6 @@ NodeLink supports selecting specific audio tracks for videos that contain multip
     
     When you load a track (especially from YouTube), the response includes an `audioTracks` array inside `pluginInfo`. This lists all available audio streams for that video.
 
-```json
-"pluginInfo": {
-    "audioTracks": [
-        {
-            "id": "en",
-            "name": "English (Original)",
-            "isDefault": true,
-            "isAutoDubbed": false
-        },
-        {
-            "id": "pt-br",
-            "name": "Portuguese (Brazil)",
-            "isDefault": false,
-            "isAutoDubbed": true
-        }
-    ]
-}
-```
-
-    **2. Select a track**
-    
-    By default, NodeLink plays the **default/original** audio. To play a different track (e.g., Portuguese dub), pass the `audioTrackId` in the `track` object when updating the player.
-
-```bash
-curl -X PATCH "http://your-server.com/v4/sessions/{sessionId}/players/{guildId}" \
-     -H "Authorization: yourPassword" \
-     -H "Content-Type: application/json" \
-     -d '{
-       "track": {
-         "encoded": "...",
-         "audioTrackId": "pt-br"
-       }
-     }'
-```
-  </ApiSection>
-
-  <ApiSection title="Use Cases">
-    - **Multi-language Videos**: Allow users to switch between original audio and dubbed versions.
-    - **Descriptive Audio**: Select audio tracks with descriptive commentary for accessibility.
-  </ApiSection>
-</ApiCard>
-
-## Multi-Audio Track Support
-
-NodeLink supports selecting specific audio tracks for videos that contain multiple audio streams (e.g., Netflix-style dubs, multi-language YouTube videos).
-
-<ApiCard name="Audio Track Selector" isNew method="FEATURE" url="audioTrackId" description="Select a specific audio language/track for playback.">
-  <ApiSection title="How to use">
-    **1. Check for available tracks**
-    
-    When you load a track (especially from YouTube), the response includes an `audioTracks` array inside `pluginInfo`. This lists all available audio streams for that video.
-
     To see this information, you must load the track using `loadTracks`.
 
 ```json
@@ -873,6 +947,7 @@ This provides more accurate timing for tracking actual playback start times and 
 </Callout>
   </ApiSection>
 </ApiCard>
+
 ## YouTube Source Configuration
 
 <ApiCard name="Update Config" isNew method="PATCH" url="/v4/youtube/config" description="Updates the YouTube configuration (RefreshToken or VisitorData) in real-time.">

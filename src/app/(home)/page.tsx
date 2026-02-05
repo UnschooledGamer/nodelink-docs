@@ -23,11 +23,11 @@ export default function HomePage() {
             NodeLink
           </h1>
           <p className="text-lg md:text-xl 2xl:text-2xl 4k:text-4xl text-fd-foreground font-medium">
-            A modern Lavalink alternative built entirely in Node.js.
+            A high-performance standalone audio engine built entirely in Node.js.
           </p>
           <p className="text-sm md:text-base 2xl:text-lg 4k:text-2xl text-fd-muted-foreground">
-            Lightweight, modular, and optimized for real-time performance. <br className="hidden md:inline" />
-            It doesn’t try to reinvent the wheel — it just makes it spin with less weight. 🌿
+            Lightweight, modular, and optimized for deterministic real-time delivery. <br className="hidden md:inline" />
+            Designed to stand alone as a robust audio mesh for modern applications. 🌿
           </p>
         </div>
 
@@ -93,14 +93,14 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Feature 3: WASM (Technical) */}
+          {/* Feature 3: Native Audio (Technical) */}
           <div className="md:col-span-1 rounded-2xl border border-fd-border bg-fd-card p-6 hover:bg-fd-accent/10 transition-colors">
             <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center mb-4 border border-blue-500/20 text-xl">
               ⚡
             </div>
-            <h3 className="text-lg font-bold mb-1">WASM Decoding</h3>
+            <h3 className="text-lg font-bold mb-1">Native Audio</h3>
             <p className="text-sm text-fd-muted-foreground">
-              Powered by WebAssembly and native modules for precise, bit-perfect audio processing.
+              Powered by Rust bindings and WebAssembly for precise, bit-perfect audio processing (AAC uses WASM).
             </p>
           </div>
 
@@ -209,41 +209,38 @@ bun start`}
         </Steps>
       </section>
 
-      {/* Performance Stats */}
+      {/* Performance & Scaling */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
         <div>
-          <h2 className="text-2xl font-bold mb-4 text-fd-foreground">Memory Efficiency</h2>
+          <h2 className="text-2xl font-bold mb-4 text-fd-foreground">Architectural Efficiency</h2>
           <p className="text-fd-muted-foreground mb-4 leading-relaxed">
-            NodeLink is designed to respect your resources. It uses a worker-based architecture where
-            each process manages its own players and buffers.
+            NodeLink v3.5+ is engineered for high-density scalability. Whether running on a single core or a massive cluster, the engine adapts its footprint to ensure deterministic audio delivery.
           </p>
           <ul className="space-y-3">
             <li className="flex items-center gap-3">
-              <span className="flex items-center justify-center w-8 h-8 shrink-0 rounded-full bg-fd-primary/10 text-fd-primary font-bold text-xs border border-fd-primary/20">
-                ~50
+              <span className="flex items-center justify-center min-w-8 h-8 px-2 w-fit shrink-0 rounded-full bg-fd-primary/10 text-fd-primary font-bold text-xs border border-fd-primary/20">
+                24
               </span>
-              <span className="text-sm font-medium text-fd-foreground">MB at Startup</span>
+              <span className="text-sm font-medium text-fd-foreground">MB Idle (Single-Process)</span>
             </li>
             <li className="flex items-center gap-3">
-              <span className="flex items-center justify-center w-8 h-8 shrink-0 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 font-bold text-xs border border-fd-border">
-                ~24
+              <span className="flex items-center justify-center min-w-8 h-8 px-2 w-fit shrink-0 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 font-bold text-xs border border-fd-border">
+                Scalable
               </span>
-              <span className="text-sm font-medium text-fd-foreground">MB when Idle</span>
+              <span className="text-sm font-medium text-fd-foreground">Optimized Multi-Worker Footprint</span>
             </li>
             <li className="flex items-center gap-3">
-              <span className="flex items-center justify-center w-8 h-8 shrink-0 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-xs border border-fd-border">
-                +4
+              <span className="flex items-center justify-center min-w-8 h-8 px-2 w-fit shrink-0 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-xs border border-fd-border">
+                Real-time
               </span>
-              <span className="text-sm font-medium text-fd-foreground">MB per Active Player (avg)</span>
+              <span className="text-sm font-medium text-fd-foreground">Deterministic DSP Pipeline</span>
             </li>
           </ul>
         </div>
         <div className="bg-fd-card text-fd-card-foreground p-6 rounded-xl border border-fd-border shadow-sm">
-          <h3 className="font-semibold mb-2">Architecture</h3>
+          <h3 className="font-semibold mb-2">The Scaling Advantage</h3>
           <p className="text-sm text-fd-muted-foreground">
-            Workers act as autonomous mini-instances. This reduces bottlenecks and keeps stability
-            even under heavy load. The modular structure allows swapping components without
-            touching the core server.
+            Our tiered cluster architecture separates non-deterministic I/O from time-critical audio processing. This results in a highly optimized memory footprint with significantly higher throughput and stability than monolithic designs.
           </p>
         </div>
       </section>

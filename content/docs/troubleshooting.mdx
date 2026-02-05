@@ -49,6 +49,27 @@ Here are specific errors you might encounter in your console or logs, and exactl
   *   **Client Name:** Some clients fail to send a `Client-Name` header. NodeLink rejects these connections. Ensure your client library is up to date.
 </TroubleshootingCard>
 
+<TroubleshootingCard 
+  title="Identifier Not Supported" 
+  type="error"
+  fields={[
+    { name: "Error", value: "Track identifier loading is not supported", inline: true },
+    { name: "Source", value: "UpdatePlayer / Mix", inline: true },
+    { name: "Fix", value: "Use encoded tracks", inline: true }
+  ]}
+>
+  **Message:** `Track identifier loading is not supported.`
+  
+  You attempted to play a track by passing an `identifier` (URL or search query) directly to the `UpdatePlayer` or `Add Mix Layer` endpoints. 
+  
+  NodeLink (and standard Lavalink v4) requires tracks to be **encoded** strings for these operations.
+  
+  **Solution:**
+  1. Call `/v4/loadtracks?identifier=...` first.
+  2. Take the `encoded` string from the response.
+  3. Pass that `encoded` string to the player update.
+</TroubleshootingCard>
+
 ## YouTube Specifics
 
 <TroubleshootingCard 
