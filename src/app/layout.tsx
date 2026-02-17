@@ -17,6 +17,17 @@ export default function Layout({ children }: LayoutProps<'/'>) {
             }}
         >{children}</RootProvider>
         <script defer src="https://cloud.umami.is/script.js" data-website-id="8d395f4f-83ba-4bb3-b1d4-b532b314f1ba"></script>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17958553804"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'AW-17958553804');
+            `,
+          }}
+        />
       </body>
     </html>
   );
