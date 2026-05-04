@@ -120,6 +120,88 @@ Features unique to NodeLink that extend beyond standard Lavalink compatibility.
   </ApiSection>
 </ApiCard>
 
+<ApiCard name="SponsorBlock" isNew method="FEATURE" url="sponsorblock" description="Automatically skip sponsored or unwanted segments in YouTube tracks using the SponsorBlock community database.">
+  <ApiSection title="Overview">
+    When enabled, NodeLink fetches community-reported segments from [SponsorBlock](https://sponsor.ajay.app) as soon as a YouTube track starts. Matching segments are automatically skipped at runtime based on the configured categories and action types. Each player maintains its own SponsorBlock state, which can be read and updated via the REST API.
+
+    This feature is **YouTube-only** — segments are only fetched for tracks whose `sourceName` is `youtube`.
+  </ApiSection>
+
+  <ApiSection title="Configuration">
+```js
+// config.js
+sponsorblock: {
+  enabled: true,
+  api: 'https://sponsor.ajay.app',
+  categories: ['sponsor', 'selfpromo', 'intro', 'outro'],
+  actionTypes: ['skip'],
+  skipMarginMs: 150
+}
+```
+    See [SponsorBlock config](/docs/config#sponsorblock) for all available options.
+  </ApiSection>
+
+  <ApiSection title="REST Endpoints">
+    The SponsorBlock state for each player is managed via four endpoints:
+
+    - `GET /v4/sessions/:sessionId/players/:guildId/sponsorblock` — Read current state
+    - `PATCH /v4/sessions/:sessionId/players/:guildId/sponsorblock` — Update settings (`enabled`, `categories`, `actionTypes`, `skipMarginMs`)
+    - `POST /v4/sessions/:sessionId/players/:guildId/sponsorblock` — Override the segments array with a custom list
+    - `DELETE /v4/sessions/:sessionId/players/:guildId/sponsorblock` — Clear all SponsorBlock state
+
+    See the [REST API docs](/docs/api/rest#sponsorblock) for full request/response details.
+  </ApiSection>
+
+  <ApiSection title="WebSocket Events">
+    <Accordions>
+      <Accordion title="SponsorBlockSegmentsLoadedEvent">
+        Fired when segments have been fetched from the SponsorBlock API for the current track.
+```json
+{
+  "op": "event",
+  "type": "SponsorBlockSegmentsLoadedEvent",
+  "guildId": "987654321098765432",
+  "segments": [
+    {
+      "uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "start": 12.5,
+      "end": 45.0,
+      "category": "sponsor",
+      "actionType": "skip",
+      "votes": 42,
+      "locked": false,
+      "videoDuration": 213.0,
+      "description": ""
+    }
+  ]
+}
+```
+      </Accordion>
+      <Accordion title="SponsorBlockSegmentSkippedEvent">
+        Fired each time a segment is automatically skipped during playback.
+```json
+{
+  "op": "event",
+  "type": "SponsorBlockSegmentSkippedEvent",
+  "guildId": "987654321098765432",
+  "segment": {
+    "uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "start": 12.5,
+    "end": 45.0,
+    "category": "sponsor",
+    "actionType": "skip",
+    "votes": 42,
+    "locked": false,
+    "videoDuration": 213.0,
+    "description": ""
+  }
+}
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
 ## Enhanced Track Metadata
 
 <ApiCard name="Holo Tracks" method="CONFIG" url="enableHoloTracks" description="Automatically enriches tracks with comprehensive metadata when they start playing.">

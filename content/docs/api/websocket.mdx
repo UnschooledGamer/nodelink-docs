@@ -122,6 +122,10 @@ NodeLink sends various events to keep clients informed about playback status, pl
     <ApiSchema name="frameStats.nulled" type="number" description="Frames that were null/empty" />
     <ApiSchema name="frameStats.deficit" type="number" description="Frames that failed to send" />
     <ApiSchema name="frameStats.expected" type="number" description="Total expected frames" />
+    <ApiSchema name="eventLoopLagP50" type="number?" description="Event loop lag p50 percentile in milliseconds (optional)." />
+    <ApiSchema name="eventLoopLagP95" type="number?" description="Event loop lag p95 percentile in milliseconds (optional)." />
+    <ApiSchema name="eventLoopLagP99" type="number?" description="Event loop lag p99 percentile in milliseconds (optional)." />
+    <ApiSchema name="stuckRecoveries" type="number?" description="Number of stuck-track recovery attempts in the last stats interval (optional)." />
   </ApiSection>
   <ApiSection title="Example">
 ```json
@@ -298,6 +302,66 @@ NodeLink sends various events to keep clients informed about playback status, pl
   },
   "thresholdMs": 10000,
   "reason": "Recovery attempt failed"
+}
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="SponsorBlockSegmentsLoadedEvent" isNew method="EVENT" description="Sent when SponsorBlock segments have been fetched for the currently playing YouTube track.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "SponsorBlockSegmentsLoadedEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID" />
+    <ApiSchema name="segments" type="SponsorBlockSegment[]" description="Array of SponsorBlock segments loaded for this track." />
+  </ApiSection>
+  <ApiSection title="Example">
+```json
+{
+  "op": "event",
+  "type": "SponsorBlockSegmentsLoadedEvent",
+  "guildId": "987654321098765432",
+  "segments": [
+    {
+      "uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "start": 12.5,
+      "end": 45.0,
+      "category": "sponsor",
+      "actionType": "skip",
+      "votes": 42,
+      "locked": false,
+      "videoDuration": 213.0,
+      "description": ""
+    }
+  ]
+}
+```
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="SponsorBlockSegmentSkippedEvent" isNew method="EVENT" description="Sent when a SponsorBlock segment is automatically skipped during playback.">
+  <ApiSection title="Payload Structure">
+    <ApiSchema name="op" type="string" description='Always "event"' />
+    <ApiSchema name="type" type="string" description='Always "SponsorBlockSegmentSkippedEvent"' />
+    <ApiSchema name="guildId" type="string" description="Discord guild ID" />
+    <ApiSchema name="segment" type="SponsorBlockSegment" description="The segment that was skipped." />
+  </ApiSection>
+  <ApiSection title="Example">
+```json
+{
+  "op": "event",
+  "type": "SponsorBlockSegmentSkippedEvent",
+  "guildId": "987654321098765432",
+  "segment": {
+    "uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "start": 12.5,
+    "end": 45.0,
+    "category": "sponsor",
+    "actionType": "skip",
+    "votes": 42,
+    "locked": false,
+    "videoDuration": 213.0,
+    "description": ""
+  }
 }
 ```
   </ApiSection>

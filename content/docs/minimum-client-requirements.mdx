@@ -57,6 +57,9 @@ administrative, or monitoring-oriented are excluded from the minimum.
   <Card title="Search Prefixes" href="#search-prefixes">
     Additional search prefixes beyond Lavalink.
   </Card>
+  <Card title="SponsorBlock" href="#sponsorblock">
+    REST endpoints and WS events for automatic segment skipping.
+  </Card>
 </Cards>
 
 ---
@@ -139,7 +142,7 @@ administrative, or monitoring-oriented are excluded from the minimum.
 
 **Minimum support**
 - Additional prefixes: `admsearch`, `amsearch`, `audiomack`, `bcsearch`,
-  `bilibili`, `dzsearch`, `flowery`, `ftts`, `gaanasearch`, `gtts`, `jssearch`,
+  `bilibili`, `dzsearch`, `flowery`, `ftts`, `gaanasearch`, `gdsearch`, `gtts`, `jssearch`,
   `lfsearch`, `mcsearch`, `ncsearch`, `nicovideo`, `pdsearch`, `shsearch`,
   `speak`, `spsearch`, `szsearch`, `tdsearch`, `vksearch`
 
@@ -166,7 +169,23 @@ compatibility bar for clients:
 
 ---
 
+### SponsorBlock
+
+**Minimum support**
+- REST: `GET/PATCH/POST/DELETE /v4/sessions/:sessionId/players/:guildId/sponsorblock`
+- WS events: `SponsorBlockSegmentsLoadedEvent`, `SponsorBlockSegmentSkippedEvent`
+
+<Accordions>
+  <Accordion title="Why it matters for clients">
+    SponsorBlock introduces new REST endpoints for reading and managing per-player
+    segment state, plus two new WebSocket events. Clients must implement the REST
+    calls and handle the events to provide full SponsorBlock integration.
+  </Accordion>
+</Accordions>
+
+---
+
 ## Conclusion
 
-If a client implements the seven minimum areas above, it can be marked as an
+If a client implements the eight minimum areas above, it can be marked as an
 official NodeLink-compatible client in the README feature matrix.

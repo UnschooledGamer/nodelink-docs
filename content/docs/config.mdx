@@ -437,6 +437,42 @@ Configuration for the built-in audio mixer (mix layers).
 
 ---
 
+## SponsorBlock
+
+Automatic skipping of sponsored or unwanted segments in YouTube tracks, powered by the [SponsorBlock](https://sponsor.ajay.app) community database. This feature is YouTube-only; segments are fetched when a YouTube track starts playing.
+
+<TypeTable
+  type={{
+    'sponsorblock.enabled': {
+      description: 'Master toggle for automatic segment skipping.',
+      type: 'boolean',
+      default: 'false'
+    },
+    'sponsorblock.api': {
+      description: 'SponsorBlock API base URL.',
+      type: 'string',
+      default: '"https://sponsor.ajay.app"'
+    },
+    'sponsorblock.categories': {
+      description: 'Segment categories to skip (e.g. sponsor, intro, outro, selfpromo, interaction, preview, music_offtopic, filler).',
+      type: 'string[]',
+      default: '["sponsor","selfpromo","interaction","intro","outro","preview","music_offtopic","filler"]'
+    },
+    'sponsorblock.actionTypes': {
+      description: 'Actions to take on matched segments.',
+      type: 'string[]',
+      default: '["skip"]'
+    },
+    'sponsorblock.skipMarginMs': {
+      description: 'Skip margin in milliseconds to avoid off-by-one errors near segment boundaries.',
+      type: 'number',
+      default: '150'
+    }
+  }}
+/>
+
+---
+
 ## Sources
 
 Configuration for specific music and media providers.
@@ -840,6 +876,25 @@ Configuration for specific music and media providers.
     silence: { type: 'number', default: '0' },
     speed: { type: 'number', default: '1.0' },
     enforceConfig: { type: 'boolean', default: 'false' }
+  }}
+/>
+
+### Google Drive
+
+Plays audio files hosted on Google Drive. Use the `gdsearch:` prefix or a direct Google Drive share URL with `/v4/loadtracks`.
+
+<TypeTable
+  type={{
+    enabled: {
+      description: 'Enables the Google Drive audio source.',
+      type: 'boolean',
+      default: 'true'
+    },
+    cookies: {
+      description: 'Optional Cookie header string for authenticated access to private or restricted Google Drive files.',
+      type: 'string',
+      default: 'undefined'
+    }
   }}
 />
 
