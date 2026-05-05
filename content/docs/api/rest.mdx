@@ -166,6 +166,31 @@ The REST API allows you to manage sessions, players, and resolve audio tracks. A
   </ApiSection>
 </ApiCard>
 
+<ApiCard name="SponsorBlockSegment" description="A single SponsorBlock community-reported segment for a YouTube video.">
+  <ApiSection title="Fields">
+    <ApiSchema name="uuid" type="string" required description="Unique identifier for this segment." />
+    <ApiSchema name="start" type="number" required description="Segment start time in seconds." />
+    <ApiSchema name="end" type="number" required description="Segment end time in seconds." />
+    <ApiSchema name="category" type="string" required description="Segment category (e.g. sponsor, intro, outro, selfpromo, interaction, preview, music_offtopic, filler)." />
+    <ApiSchema name="actionType" type="string" required description="Action applied to this segment (e.g. skip, mute, poi, chapter)." />
+    <ApiSchema name="votes" type="number" required description="Community vote count for this segment." />
+    <ApiSchema name="locked" type="boolean" required description="Whether this segment is locked by a SponsorBlock moderator." />
+    <ApiSchema name="videoDuration" type="number" required description="Total video duration in seconds at the time this segment was submitted." />
+    <ApiSchema name="description" type="string" required description="Human-readable description of this segment." />
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="PlayerSponsorBlockState" description="The SponsorBlock state for a player. Returned by GET/PATCH/POST sponsorblock endpoints.">
+  <ApiSection title="Fields">
+    <ApiSchema name="enabled" type="boolean" required description="Whether automatic segment skipping is enabled for this player." />
+    <ApiSchema name="categories" type="string[]" required description="Segment categories that will be skipped." />
+    <ApiSchema name="actionTypes" type="string[]" required description="Action types that trigger skipping." />
+    <ApiSchema name="segments" type="SponsorBlockSegment[]" required description="Currently loaded segments for the active track." />
+    <ApiSchema name="lastSkippedUuid" type="string | null" required description="UUID of the most recently skipped segment, or null." />
+    <ApiSchema name="skipMarginMs" type="number" required description="Skip margin in milliseconds applied near segment boundaries." />
+  </ApiSection>
+</ApiCard>
+
 ## Tracks & Items
 
 <ApiCard name="LoadTracks" method="GET" url="/v4/loadtracks" description="Resolves audio tracks for use in playback. Supports direct URLs, search queries, and playlists.">
@@ -599,6 +624,7 @@ curl -X GET "http://your-server.com/v4/sessions/yourSessionId/players/yourGuildI
     <ApiSchema name="nextTrack.encoded" type="string" description="Base64 encoded track to preload." />
     <ApiSchema name="nextTrack.identifier" type="string" description="NOT SUPPORTED. Use nextTrack.encoded instead." />
     <ApiSchema name="position" type="number" description="Track position in milliseconds (min: 0)" />
+    <ApiSchema name="startTime" type="number" description="Legacy alias for position accepted by some older clients. NodeLink accepts either field." />
     <ApiSchema name="endTime" type="number" description="When to stop the track in milliseconds (null to reset)" />
     <ApiSchema name="volume" type="number" description="Player volume from 0 to 1000 (100 = 100%)" />
     <ApiSchema name="paused" type="boolean" description="Whether the player should be paused" />
@@ -698,6 +724,114 @@ curl -X PATCH "http://your-server.com/v4/sessions/yourSessionId/players/yourGuil
 ```bash
 curl -X DELETE "http://your-server.com/v4/sessions/yourSessionId/players/yourGuildId" \
           -H "Authorization: yourPassword"
+```
+  </ApiSection>
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="Success Response">
+```
+204 No Content
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
+## SponsorBlock
+
+<ApiCard name="GetSponsorBlock" method="GET" url="/v4/sessions/{sessionId}/players/{guildId}/sponsorblock" description="Returns the current SponsorBlock state for a player.">
+  <ApiSection title="Example Request">
+```bash
+curl -X GET "http://your-server.com/v4/sessions/yourSessionId/players/yourGuildId/sponsorblock" \
+     -H "Authorization: yourPassword"
+```
+  </ApiSection>
+  <ApiSection title="Response">
+    <Accordions>
+      <Accordion title="Example Response">
+```json
+{
+  "enabled": true,
+  "categories": ["sponsor", "selfpromo", "intro", "outro"],
+  "actionTypes": ["skip"],
+  "segments": [
+    {
+      "uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "start": 12.5,
+      "end": 45.0,
+      "category": "sponsor",
+      "actionType": "skip",
+      "votes": 42,
+      "locked": false,
+      "videoDuration": 213.0,
+      "description": ""
+    }
+  ],
+  "lastSkippedUuid": null,
+  "skipMarginMs": 150
+}
+```
+      </Accordion>
+    </Accordions>
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="UpdateSponsorBlock" method="PATCH" url="/v4/sessions/{sessionId}/players/{guildId}/sponsorblock" description="Updates SponsorBlock settings for a player. Only the provided fields are changed.">
+  <ApiSection title="Body Parameters">
+    <ApiSchema name="enabled" type="boolean" description="Toggle automatic segment skipping for this player." />
+    <ApiSchema name="categories" type="string[]" description="Override the segment categories to skip." />
+    <ApiSchema name="actionTypes" type="string[]" description="Override the action types that trigger skipping." />
+    <ApiSchema name="skipMarginMs" type="number" description="Override the skip margin in milliseconds." />
+  </ApiSection>
+  <ApiSection title="Example Request">
+```bash
+curl -X PATCH "http://your-server.com/v4/sessions/yourSessionId/players/yourGuildId/sponsorblock" \
+     -H "Authorization: yourPassword" \
+     -H "Content-Type: application/json" \
+     -d '{"enabled": true, "categories": ["sponsor", "intro"]}'
+```
+  </ApiSection>
+  <ApiSection title="Response">
+    Returns the updated [PlayerSponsorBlockState](#playersponsorblockstate).
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="SetSponsorBlockSegments" isNew method="POST" url="/v4/sessions/{sessionId}/players/{guildId}/sponsorblock" description="Overrides the segments array for a player with a custom set of segments.">
+  <ApiSection title="Body Parameters">
+    <ApiSchema name="segments" type="SponsorBlockSegment[]" required description="Array of SponsorBlock segments to set. Replaces any previously loaded segments." />
+  </ApiSection>
+  <ApiSection title="Example Request">
+```bash
+curl -X POST "http://your-server.com/v4/sessions/yourSessionId/players/yourGuildId/sponsorblock" \
+     -H "Authorization: yourPassword" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "segments": [
+         {
+           "uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+           "start": 12.5,
+           "end": 45.0,
+           "category": "sponsor",
+           "actionType": "skip",
+           "votes": 42,
+           "locked": false,
+           "videoDuration": 213.0,
+           "description": ""
+         }
+       ]
+     }'
+```
+  </ApiSection>
+  <ApiSection title="Response">
+    Returns the updated [PlayerSponsorBlockState](#playersponsorblockstate).
+  </ApiSection>
+</ApiCard>
+
+<ApiCard name="ClearSponsorBlock" method="DELETE" url="/v4/sessions/{sessionId}/players/{guildId}/sponsorblock" description="Clears all SponsorBlock state for a player (segments, last skipped UUID, and resets to defaults).">
+  <ApiSection title="Example Request">
+```bash
+curl -X DELETE "http://your-server.com/v4/sessions/yourSessionId/players/yourGuildId/sponsorblock" \
+     -H "Authorization: yourPassword"
 ```
   </ApiSection>
   <ApiSection title="Response">
@@ -838,6 +972,7 @@ curl -X GET "http://your-server.com/v4/info" \
     "deezer",
     "bandcamp",
     "twitch",
+    "googledrive",
     "http",
     "local"
   ],
@@ -888,6 +1023,10 @@ curl -X GET "http://your-server.com/v4/stats" \
     "nodelinkLoad": 0
   },
   "frameStats": null,
+  "eventLoopLagP50": 0.12,
+  "eventLoopLagP95": 0.48,
+  "eventLoopLagP99": 1.02,
+  "stuckRecoveries": 0,
   "detailedStats": {
     "api": {
       "requests": {
@@ -912,6 +1051,12 @@ curl -X GET "http://your-server.com/v4/stats" \
 ```
       </Accordion>
     </Accordions>
+  </ApiSection>
+  <ApiSection title="New Fields">
+    <ApiSchema name="eventLoopLagP50" type="number?" description="Event loop lag p50 percentile in milliseconds (optional, per-worker)." />
+    <ApiSchema name="eventLoopLagP95" type="number?" description="Event loop lag p95 percentile in milliseconds (optional, per-worker)." />
+    <ApiSchema name="eventLoopLagP99" type="number?" description="Event loop lag p99 percentile in milliseconds (optional, per-worker)." />
+    <ApiSchema name="stuckRecoveries" type="number?" description="Number of stuck-track recovery attempts during the last stats interval (optional)." />
   </ApiSection>
 </ApiCard>
 
