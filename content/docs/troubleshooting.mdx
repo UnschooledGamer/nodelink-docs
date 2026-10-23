@@ -30,7 +30,7 @@ Here are specific errors you might encounter in your console or logs, and exactl
   
   *   **Linux/Mac:** Run `lsof -i :3000` to see what's using it, then `kill -9 <PID>`.
   *   **Windows:** Use Task Manager or `netstat -ano | findstr :3000`.
-  *   **Alternative:** Change `server.port` in your `config.js`.
+  *   **Alternative:** Change `server.port` in your `config.ts`.
 </TroubleshootingCard>
 
 <TroubleshootingCard 
@@ -43,7 +43,7 @@ Here are specific errors you might encounter in your console or logs, and exactl
 >
   **Message:** `Unauthorized connection attempt from [IP] - Invalid password provided`
   
-  Your Lavalink client (the bot) is sending a password that does not match `server.password` in `config.js`.
+  Your Lavalink client (the bot) is sending a password that does not match `server.password` in `config.ts`.
   
   *   **Check:** Ensure both your bot's config and NodeLink's config match exactly.
   *   **Client Name:** Some clients fail to send a `Client-Name` header. NodeLink rejects these connections. Ensure your client library is up to date.
@@ -85,7 +85,7 @@ Here are specific errors you might encounter in your console or logs, and exactl
   
   NodeLink relies on a signature deciphering service (like the one hosted by Kikkia) to play YouTube videos.
   
-  *   **Check Config:** Look at `sources.youtube.cipher.url` in `config.js`.
+  *   **Check Config:** Look at `sources.youtube.cipher.url` in `config.ts`.
   *   **Status:** The public server might be down. You may need to host your own or find an alternative.
 </TroubleshootingCard>
 
@@ -150,7 +150,7 @@ Here are specific errors you might encounter in your console or logs, and exactl
   If a worker process dies, it usually means something went very wrong internally. NodeLink isolates players in workers, so if a worker fails, it dumps the error and the responsibility back to the main process (and you).
   
   **What to do:**
-  1.  Enable debug logging in `config.js` (set `logging.level` to `'debug'`) to catch the stack trace.
+  1.  Enable debug logging in `config.ts` (set `logging.level` to `'debug'`) to catch the stack trace.
   2.  This is likely a bug in the core logic. Please copy the logs and report it on our Discord servers.
 </TroubleshootingCard>
 
@@ -161,13 +161,13 @@ Here are specific errors you might encounter in your console or logs, and exactl
   type="warn"
   fields={[
     { name: "Symptom", value: "Feature Not Working / Error", inline: true },
-    { name: "Source", value: "config.js", inline: true },
+    { name: "Source", value: "config.ts", inline: true },
     { name: "Fix", value: "Check Default Config", inline: true }
   ]}
 >
-  NodeLink evolves fast. If you updated the server but forgot to update your `config.js`, you might be missing critical settings.
+  NodeLink evolves fast. If you updated the server but forgot to update your `config.ts`, you might be missing critical settings.
   
-  Always check the `config.default.js` file in the root directory after an update. It contains the source of truth for all available options. If an option says it doesn't exist, it probably just needs to be copied over.
+  Always check the `config.default.ts` file in the root directory after an update. It contains the source of truth for all available options. If an option says it doesn't exist, it probably just needs to be copied over.
 </TroubleshootingCard>
 
 ## Connection & Network

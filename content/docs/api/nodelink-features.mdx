@@ -128,8 +128,8 @@ Features unique to NodeLink that extend beyond standard Lavalink compatibility.
   </ApiSection>
 
   <ApiSection title="Configuration">
-```js
-// config.js
+```ts
+// config.ts
 sponsorblock: {
   enabled: true,
   api: 'https://sponsor.ajay.app',
@@ -206,12 +206,12 @@ sponsorblock: {
 
 <ApiCard name="Holo Tracks" method="CONFIG" url="enableHoloTracks" description="Automatically enriches tracks with comprehensive metadata when they start playing.">
   <ApiSection title="Overview">
-When enabled in config.js, NodeLink makes an additional API call to YouTube when a track starts, gathering rich metadata that would normally require multiple separate API calls. The enriched data includes channel information (name, subscribers, verified status), track details (views, publish date, keywords), media quality options, external links from the channel (Spotify, Instagram), and multiple thumbnail resolutions. All data is returned in the `pluginInfo` object with `type: "holo"` during the TrackStartEvent.
+When enabled in config.ts, NodeLink makes an additional API call to YouTube when a track starts, gathering rich metadata that would normally require multiple separate API calls. The enriched data includes channel information (name, subscribers, verified status), track details (views, publish date, keywords), media quality options, external links from the channel (Spotify, Instagram), and multiple thumbnail resolutions. All data is returned in the `pluginInfo` object with `type: "holo"` during the TrackStartEvent.
   </ApiSection>
 
   <ApiSection title="Configuration">
-```js
-// config.js
+```ts
+// config.ts
 enableHoloTracks: true
 ```
 
@@ -554,8 +554,8 @@ curl -X GET "http://your-server.com/v4/loadchapters?encodedTrack=QAAAAAMAM0hvdyB
 <Callout type="warn" title="Feature Must Be Enabled">
 This feature must be explicitly enabled in your configuration:
 
-```js
-// config.js
+```ts
+// config.ts
 enableTrackStreamEndpoint: true
 ```
 </Callout>
@@ -636,8 +636,8 @@ Enable this feature carefully as it allows direct audio downloads. Consider rate
 <Callout type="warn" title="Feature Must Be Enabled">
 Enable the endpoint in config:
 
-```js
-// config.js
+```ts
+// config.ts
 enableLoadStreamEndpoint: true
 ```
 </Callout>

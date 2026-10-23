@@ -14,7 +14,7 @@ NodeLink uses WebSocket connections to provide real-time communication between t
 
 <ApiCard name="WebSocket Endpoint" method="WS" url="/v4/websocket" description="Connect to this endpoint to establish a WebSocket session.">
   <ApiSection title="Headers">
-    <ApiSchema name="Authorization" type="string" required description="The server password defined in config.js." />
+    <ApiSchema name="Authorization" type="string" required description="The server password defined in config.ts." />
     <ApiSchema name="Client-Name" type="string" required description='Name and version of your client (e.g., "MyMusicBot/1.0.0").' />
     <ApiSchema name="User-Id" type="string" required description="Discord User ID of the bot. Must be 18-19 digits." />
     <ApiSchema name="Session-Id" type="string" description="Session ID to resume. If provided, attempts to resume previous session." />

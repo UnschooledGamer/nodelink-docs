@@ -1466,7 +1466,7 @@ curl -X GET "http://your-server.com/v4/trackstream?encodedTrack=QAAAAAMAM0hvdyB0
 
 <ApiCard name="LoadStream" isNew method="GET / POST" url="/v4/loadstream" description="Streams raw PCM audio for a track (if enabled).">
   <ApiSection title="Configuration">
-    Requires `enableLoadStreamEndpoint: true` in `config.js`.
+    Requires `enableLoadStreamEndpoint: true` in `config.ts`.
   </ApiSection>
   <ApiSection title="Query / Body Parameters">
     <ApiSchema name="encodedTrack" type="string" required description="Base64 encoded track string." />

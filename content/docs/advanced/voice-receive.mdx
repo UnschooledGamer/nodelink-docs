@@ -16,10 +16,10 @@ This feature is currently experimental and may undergo breaking changes in the p
 
 ## Configuration
 
-To enable voice receive, you must configure it in your `config.js` or via environment variables.
+To enable voice receive, you must configure it in your `config.ts` or via environment variables.
 
-```js
-// config.js
+```ts
+// config.ts
 voiceReceive: {
   enabled: true,
   format: "opus" // "opus" or "pcm_s16le" (48kHz, Stereo)
@@ -103,4 +103,3 @@ ws.on('message', (data) => {
   }
 });
 ```
-

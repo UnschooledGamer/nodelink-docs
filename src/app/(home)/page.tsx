@@ -176,7 +176,7 @@ export default function HomePage() {
                 <DynamicCodeBlock
                   lang="bash"
                   code={`# Copy config & start
-cp config.default.js config.js
+cp config.default.ts config.ts
 npm run start`}
                 />
               </TabsContent>
@@ -184,7 +184,7 @@ npm run start`}
                 <DynamicCodeBlock
                   lang="bash"
                   code={`# Copy config & start
-cp config.default.js config.js
+cp config.default.ts config.ts
 yarn start`}
                 />
               </TabsContent>
@@ -192,7 +192,7 @@ yarn start`}
                 <DynamicCodeBlock
                   lang="bash"
                   code={`# Copy config & start
-cp config.default.js config.js
+cp config.default.ts config.ts
 pnpm start`}
                 />
               </TabsContent>
@@ -200,7 +200,7 @@ pnpm start`}
                 <DynamicCodeBlock
                   lang="bash"
                   code={`# Copy config & start
-cp config.default.js config.js
+cp config.default.ts config.ts
 bun start`}
                 />
               </TabsContent>
